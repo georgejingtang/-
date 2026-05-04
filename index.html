@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>唐静考研英语</title>
+    <title>唐静考研英语逐句翻译库</title>
     <style>
         :root { --primary-color: #2563eb; --text-main: #1e293b; --text-muted: #64748b; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text-main); max-width: 850px; margin: 0 auto; padding: 20px; background: #f8fafc; }
@@ -23,8 +23,8 @@
 <body>
 
 <div class="header">
-    <h1>My English Corpus</h1>
-    <p>输入关键词，在唐静老师的文章中检索句子</p>
+    <h1>唐静考研</h1>
+    <p>输入关键词，在唐静老师的考研文章中检索句子</p>
     <input type="text" id="searchBox" placeholder="搜索单词或中文关键词..." autofocus>
     <div id="count" class="result-count">正在加载数据库...</div>
 </div>
@@ -49,7 +49,8 @@
     const resultsDiv = document.getElementById('results');
 
     searchBox.addEventListener('input', (e) => {
-        const query = e.target.value.trim().toLowerCase();
+        const query = e.target.value.trim();
+        
         resultsDiv.innerHTML = '';
         
         if (query.length < 2) {
@@ -58,10 +59,20 @@
         }
 
         // 同时支持英文原文和中文翻译搜索
-        const filtered = corpus.filter(item => 
-            (item.en && item.en.toLowerCase().includes(query)) || 
-            (item.cn && item.cn.includes(query))
-        );
+        const filtered = corpus.filter(item => {
+            // 中文搜索保持原有的包含匹配
+            if (item.cn && item.cn.includes(query)) {
+                return true;
+            }
+            // 英文搜索使用单词边界匹配
+            if (item.en) {
+                const cleanEn = item.en.replace(/\(\d+\s*words\)/g, '').trim();
+                const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const wordBoundaryRegex = new RegExp(`\\b${escapedQuery}\\b`, 'gi');
+                return wordBoundaryRegex.test(cleanEn);
+            }
+            return false;
+        });
 
         document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
 
@@ -71,12 +82,12 @@
         }
 
         filtered.forEach(item => {
-            const regex = new RegExp(`(${query})`, 'gi');
-            
-            // 自动清理字数统计杂质 (如: (6 words))
             const cleanEn = item.en.replace(/\(\d+\s*words\)/g, '').trim();
-            const highlightedEn = cleanEn.replace(regex, '<mark>$1</mark>');
-            const highlightedCn = item.cn.replace(regex, '<mark>$1</mark>');
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const wordBoundaryRegex = new RegExp(`\\b(${escapedQuery})\\b`, 'gi');
+            const highlightedEn = cleanEn.replace(wordBoundaryRegex, '<mark>$1</mark>');
+            const cnRegex = query.length >= 2 ? new RegExp(`(${escapedQuery})`, 'gi') : null;
+            const highlightedCn = cnRegex ? item.cn.replace(cnRegex, '<mark>$1</mark>') : item.cn;
             
             const card = document.createElement('div');
             card.className = 'card';
