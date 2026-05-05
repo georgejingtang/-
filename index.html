@@ -19,7 +19,7 @@
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
         
-        /* 新增：考研大纲单词提示样式 */
+        /* 考研大纲单词提示样式 */
         .vocab-badge {
             padding: 10px 16px;
             margin-bottom: 20px;
@@ -53,9 +53,9 @@
 
 <script>
     let corpus = [];
-    let vocabularySet = new Set();  // 新增：存储考研大纲单词
+    let vocabularySet = new Set();
 
-    // 新增：加载考研大纲单词表
+    // 加载考研大纲单词表
     async function loadVocabulary() {
         try {
             const response = await fetch('大纲.txt');
@@ -76,13 +76,13 @@
         }
     }
 
-    // 新增：判断是否在大纲中
+    // 判断是否在大纲中
     function isInVocabulary(word) {
         if (!word) return false;
         return vocabularySet.has(word.toLowerCase());
     }
 
-    // 新增：生成单词状态提示HTML
+    // 生成单词状态提示HTML
     function getVocabularyBadge(keyword) {
         if (!keyword || keyword.length < 1) return '';
         if (isInVocabulary(keyword)) {
@@ -92,7 +92,7 @@
         }
     }
 
-    // 原有的加载数据逻辑
+    // 加载数据
     fetch('fixed_tangjing_db.json')
         .then(res => res.json())
         .then(data => {
@@ -125,12 +125,13 @@
             if (item.cn && item.cn.includes(query)) {
                 return true;
             }
-            // 英文搜索使用单词边界匹配
+            // 英文搜索使用前缀匹配（支持派生词、单复数等）
             if (item.en) {
                 const cleanEn = item.en.replace(/\(\d+\s*words\)/g, '').trim();
                 const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const wordBoundaryRegex = new RegExp(`\\b${escapedQuery}\\b`, 'gi');
-                return wordBoundaryRegex.test(cleanEn);
+                // 前缀匹配：匹配以该词根开头的单词
+                const prefixRegex = new RegExp(`\\b${escapedQuery}[a-zA-Z]*\\b`, 'gi');
+                return prefixRegex.test(cleanEn);
             }
             return false;
         });
@@ -138,7 +139,6 @@
         document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
 
         if (filtered.length === 0) {
-            // 即使没有搜索结果，也显示单词状态
             const vocabHtml = getVocabularyBadge(query);
             resultsDiv.innerHTML = vocabHtml + '<div class="no-result">未找到相关句子，换个词试试？</div>';
             return;
@@ -150,8 +150,9 @@
         filtered.forEach(item => {
             const cleanEn = item.en.replace(/\(\d+\s*words\)/g, '').trim();
             const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const wordBoundaryRegex = new RegExp(`\\b(${escapedQuery})\\b`, 'gi');
-            const highlightedEn = cleanEn.replace(wordBoundaryRegex, '<mark>$1</mark>');
+            // 高亮前綴匹配到的完整单词
+            const highlightRegex = new RegExp(`\\b(${escapedQuery}[a-zA-Z]*)\\b`, 'gi');
+            const highlightedEn = cleanEn.replace(highlightRegex, '<mark>$1</mark>');
             const cnRegex = query.length >= 2 ? new RegExp(`(${escapedQuery})`, 'gi') : null;
             const highlightedCn = cnRegex ? item.cn.replace(cnRegex, '<mark>$1</mark>') : item.cn;
             
