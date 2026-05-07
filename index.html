@@ -12,21 +12,17 @@
         #searchBox { width: 100%; padding: 15px 25px; font-size: 18px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); box-sizing: border-box; }
         #searchBox:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         .result-count { margin-top: 15px; font-size: 14px; color: var(--text-muted); font-weight: 500; }
-        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #f1f5f9; transition: transform 0.2s; }
+        .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #f1f5f9; }
         .source-id { font-size: 13px; color: #6366f1; font-weight: bold; margin-bottom: 10px; background: #eef2ff; display: inline-block; padding: 4px 10px; border-radius: 6px; }
         .en { font-size: 19px; font-weight: 600; color: #0f172a; margin-bottom: 12px; line-height: 1.4; }
         .word-count { font-size: 13px; color: #94a3b8; font-weight: normal; margin-left: 6px; }
         .cn { font-size: 17px; color: #334155; border-left: 4px solid #cbd5e1; padding-left: 15px; margin-top: 10px; line-height: 1.5; }
         .opts { margin-top: 8px; padding-left: 15px; font-size: 15px; color: #475569; line-height: 1.8; }
-        .opts .opt-en { font-weight: 500; }
-        .opts .opt-cn { color: #64748b; margin-left: 6px; }
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
-
         .vocab-badge { padding: 10px 16px; margin-bottom: 20px; border-radius: 12px; font-weight: 500; text-align: center; font-size: 14px; }
         .vocab-in { background: #d4edda; border-left: 4px solid #28a745; color: #155724; }
         .vocab-out { background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; }
-
         .source-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 6px; background: #e0e7ff; color: #3730a3; }
         .source-tag.reading { background: #dbeafe; color: #1e40af; }
         .source-tag.fanyi { background: #fce7f3; color: #9d174d; }
@@ -35,14 +31,12 @@
     </style>
 </head>
 <body>
-
 <div class="header">
     <h1>唐静考研</h1>
     <p>输入关键词，在唐静老师的考研文章中检索句子</p>
     <input type="text" id="searchBox" placeholder="搜索单词或中文关键词..." autofocus>
     <div id="count" class="result-count">正在加载数据库...</div>
 </div>
-
 <div id="results"></div>
 
 <script>
@@ -105,7 +99,7 @@
                 console.log(`✅ 已加载 ${file.name} (${items.length} 条)`);
             } catch (error) { console.error(`${file.name} 加载失败:`, error); }
         }
-        document.getElementById('count').innerText = `共加载 ${corpus.length} 条翻译句子`;
+        document.getElementById('count').innerText = `共加载 ${corpus.length} 条记录`;
     }
 
     loadVocabulary();
@@ -114,32 +108,45 @@
     const searchBox = document.getElementById('searchBox');
     const resultsDiv = document.getElementById('results');
 
+    // 判断是否包含中文字符
+    function hasChinese(text) {
+        return /[\u4e00-\u9fa5]/.test(text);
+    }
+
     searchBox.addEventListener('input', (e) => {
         const query = e.target.value.trim();
         resultsDiv.innerHTML = '';
 
         if (query.length < 2) {
-            document.getElementById('count').innerText = query.length === 1 ? "请输入至少2个字符" : `共加载 ${corpus.length} 条翻译句子`;
+            document.getElementById('count').innerText = query.length === 1 ? "请输入至少2个字符" : `共加载 ${corpus.length} 条记录`;
             return;
         }
 
+        const isChinese = hasChinese(query);
         const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const prefixRegex = new RegExp(`\\b${escapedQuery}[a-zA-Z]*\\b`, 'gi');
-        const cnRegex = new RegExp(`(${escapedQuery})`, 'gi');
+
+        // 英文用前缀匹配正则，中文用包含匹配
+        const prefixRegex = isChinese ? null : new RegExp(`\\b${escapedQuery}[a-zA-Z]*\\b`, 'gi');
+        const cnContainsRegex = new RegExp(escapedQuery, 'gi');
 
         const filtered = corpus.filter(item => {
-            // 中文搜索
-            if (item.cn && item.cn.includes(query)) return true;
-            if (item.cn_q && item.cn_q.includes(query)) return true;
-            if (item.cn_opts && item.cn_opts.some(opt => opt.includes(query))) return true;
+            // 收集该条目的所有中文文本
+            const cnTexts = [];
+            if (item.cn) cnTexts.push(item.cn);
+            if (item.cn_q) cnTexts.push(item.cn_q);
+            if (item.cn_opts) cnTexts.push(...item.cn_opts);
 
-            // 英文搜索
+            // 收集该条目的所有英文文本
             const enTexts = [];
             if (item.en) enTexts.push(cleanEnglish(item.en));
             if (item.en_q) enTexts.push(item.en_q);
             if (item.en_opts) enTexts.push(...item.en_opts);
 
-            return enTexts.some(text => prefixRegex.test(text));
+            if (isChinese) {
+                return cnTexts.some(text => cnContainsRegex.test(text));
+            } else {
+                return enTexts.some(text => prefixRegex.test(text));
+            }
         });
 
         document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
@@ -154,13 +161,13 @@
         filtered.forEach(item => {
             // 提纲选讲类型（阅读题）
             if (item.en_q && item.en_opts) {
-                const highlightedEnQ = item.en_q.replace(prefixRegex, '<mark>$1</mark>');
-                const highlightedCnQ = item.cn_q.replace(cnRegex, '<mark>$1</mark>');
+                const highlightedEnQ = isChinese ? item.en_q : item.en_q.replace(prefixRegex, '<mark>$1</mark>');
+                const highlightedCnQ = item.cn_q.replace(cnContainsRegex, '<mark>$1</mark>');
                 let optsHtml = '';
                 for (let i = 0; i < item.en_opts.length; i++) {
-                    const highlightedEnOpt = item.en_opts[i].replace(prefixRegex, '<mark>$1</mark>');
-                    const highlightedCnOpt = (item.cn_opts[i] || '').replace(cnRegex, '<mark>$1</mark>');
-                    optsHtml += `<div class="opt-item"><span class="opt-en">${highlightedEnOpt}</span><span class="opt-cn">${highlightedCnOpt}</span></div>`;
+                    const highlightedEnOpt = isChinese ? item.en_opts[i] : item.en_opts[i].replace(prefixRegex, '<mark>$1</mark>');
+                    const highlightedCnOpt = (item.cn_opts[i] || '').replace(cnContainsRegex, '<mark>$1</mark>');
+                    optsHtml += `<div><span class="opt-en">${highlightedEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
                 }
                 allHtml += `
                     <div class="card">
@@ -176,8 +183,8 @@
             } else {
                 // 完型/翻译类型
                 const cleanEn = cleanEnglish(item.en || '');
-                const highlightedEn = cleanEn.replace(prefixRegex, '<mark>$1</mark>');
-                const highlightedCn = item.cn ? item.cn.replace(cnRegex, '<mark>$1</mark>') : '';
+                const highlightedEn = isChinese ? cleanEn : cleanEn.replace(prefixRegex, '<mark>$1</mark>');
+                const highlightedCn = item.cn ? item.cn.replace(cnContainsRegex, '<mark>$1</mark>') : '';
                 const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
 
                 allHtml += `
@@ -196,6 +203,5 @@
         resultsDiv.innerHTML = allHtml;
     });
 </script>
-
 </body>
 </html>
