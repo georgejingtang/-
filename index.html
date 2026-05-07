@@ -15,10 +15,11 @@
         .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #f1f5f9; transition: transform 0.2s; }
         .source-id { font-size: 13px; color: #6366f1; font-weight: bold; margin-bottom: 10px; background: #eef2ff; display: inline-block; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
         .en { font-size: 19px; font-weight: 600; color: #0f172a; margin-bottom: 12px; line-height: 1.4; }
+        .word-count { font-size: 13px; color: #94a3b8; font-weight: normal; margin-left: 6px; }
         .cn { font-size: 17px; color: #334155; border-left: 4px solid #cbd5e1; padding-left: 15px; margin-top: 10px; line-height: 1.5; }
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
-        
+
         /* 考研大纲单词提示样式 */
         .vocab-badge {
             padding: 10px 16px;
@@ -38,6 +39,22 @@
             border-left: 4px solid #ffc107;
             color: #856404;
         }
+
+        /* 来源标签样式 */
+        .source-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 6px;
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        .source-tag.reading { background: #dbeafe; color: #1e40af; }
+        .source-tag.fanyi { background: #fce7f3; color: #9d174d; }
+        .source-tag.wanxing { background: #d1fae5; color: #065f46; }
+        .source-tag.tigang { background: #fef3c7; color: #92400e; }
     </style>
 </head>
 <body>
@@ -52,8 +69,27 @@
 <div id="results"></div>
 
 <script>
+    // 按指定顺序加载的JSON文件
+    const JSON_FILES = [
+        { name: '1reading.json', tag: '阅读', tagClass: 'reading' },
+        { name: '2fanyi.json', tag: '翻译', tagClass: 'fanyi' },
+        { name: '3wanxing.json', tag: '完型', tagClass: 'wanxing' },
+        { name: '4tiganxuanxuang.json', tag: '提纲选讲', tagClass: 'tigang' }
+    ];
+
     let corpus = [];
     let vocabularySet = new Set();
+
+    // 从英文句子中提取字数统计 (如 "(20 words)")
+    function extractWordCount(enText) {
+        const match = enText.match(/\((\d+)\s*words\)/i);
+        return match ? match[1] : null;
+    }
+
+    // 移除字数统计部分，返回纯净的英文句子
+    function cleanEnglish(enText) {
+        return enText.replace(/\(\d+\s*words\)/gi, '').trim();
+    }
 
     // 加载考研大纲单词表
     async function loadVocabulary() {
@@ -92,28 +128,47 @@
         }
     }
 
-    // 加载数据
-    fetch('fixed_tangjing_db.json')
-        .then(res => res.json())
-        .then(data => {
-            corpus = data;
-            document.getElementById('count').innerText = `共加载 ${data.length} 条翻译句子`;
-        })
-        .catch(err => {
-            document.getElementById('count').innerText = "❌ 数据库加载失败，请检查文件名是否为 fixed_tangjing_db.json";
-        });
+    // 按顺序加载所有JSON文件并合并到corpus，同时打上来源标签
+    async function loadAllData() {
+        let totalCount = 0;
+        for (const file of JSON_FILES) {
+            try {
+                const response = await fetch(file.name);
+                if (!response.ok) {
+                    console.warn(`⚠️ ${file.name} 加载失败，跳过`);
+                    continue;
+                }
+                const data = await response.json();
+                const items = Array.isArray(data) ? data : [data];
+                // 为每个条目添加来源标签和排序权重
+                items.forEach(item => {
+                    item._sourceTag = file.tag;
+                    item._sourceClass = file.tagClass;
+                    // 预提取字数
+                    item._wordCount = extractWordCount(item.en || '');
+                });
+                corpus = corpus.concat(items);
+                totalCount += items.length;
+                console.log(`✅ 已加载 ${file.name} (${items.length} 条)`);
+            } catch (error) {
+                console.error(`${file.name} 加载失败:`, error);
+            }
+        }
+        document.getElementById('count').innerText = `共加载 ${corpus.length} 条翻译句子`;
+    }
 
-    // 加载单词表
+    // 初始化：加载单词表和数据库
     loadVocabulary();
+    loadAllData();
 
     const searchBox = document.getElementById('searchBox');
     const resultsDiv = document.getElementById('results');
 
     searchBox.addEventListener('input', (e) => {
         const query = e.target.value.trim();
-        
+
         resultsDiv.innerHTML = '';
-        
+
         if (query.length < 2) {
             document.getElementById('count').innerText = query.length === 1 ? "请输入至少2个字符" : `共加载 ${corpus.length} 条翻译句子`;
             return;
@@ -127,9 +182,8 @@
             }
             // 英文搜索使用前缀匹配（支持派生词、单复数等）
             if (item.en) {
-                const cleanEn = item.en.replace(/\(\d+\s*words\)/g, '').trim();
+                const cleanEn = cleanEnglish(item.en);
                 const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                // 前缀匹配：匹配以该词根开头的单词
                 const prefixRegex = new RegExp(`\\b${escapedQuery}[a-zA-Z]*\\b`, 'gi');
                 return prefixRegex.test(cleanEn);
             }
@@ -144,27 +198,31 @@
             return;
         }
 
-        // 显示单词状态 + 搜索结果
+        // 显示单词状态 + 搜索结果（保持原始顺序，即按文件顺序排列）
         let allHtml = getVocabularyBadge(query);
-        
+
         filtered.forEach(item => {
-            const cleanEn = item.en.replace(/\(\d+\s*words\)/g, '').trim();
+            const cleanEn = cleanEnglish(item.en);
             const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // 高亮前綴匹配到的完整单词
             const highlightRegex = new RegExp(`\\b(${escapedQuery}[a-zA-Z]*)\\b`, 'gi');
             const highlightedEn = cleanEn.replace(highlightRegex, '<mark>$1</mark>');
             const cnRegex = query.length >= 2 ? new RegExp(`(${escapedQuery})`, 'gi') : null;
             const highlightedCn = cnRegex ? item.cn.replace(cnRegex, '<mark>$1</mark>') : item.cn;
-            
+            // 字数统计展示
+            const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
+
             allHtml += `
                 <div class="card">
-                    <div class="source-id">📚 ${item.id}</div>
-                    <div class="en">${highlightedEn}</div>
+                    <div class="source-id">
+                        <span class="source-tag ${item._sourceClass}">${item._sourceTag}</span>
+                        📚 ${item.id}
+                    </div>
+                    <div class="en">${highlightedEn} ${wordCountHtml}</div>
                     <div class="cn">${highlightedCn}</div>
                 </div>
             `;
         });
-        
+
         resultsDiv.innerHTML = allHtml;
     });
 </script>
