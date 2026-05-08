@@ -107,6 +107,22 @@
             font-size: 14px;
             width: 14px;
         }
+        
+        /* 可点击单词样式 */
+        .clickable-word {
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 4px;
+            padding: 0 1px;
+            transition: background 0.1s ease;
+        }
+        .clickable-word:hover {
+            background: #e0f2fe;
+        }
+        .clickable-word:active {
+            background: #bae6fd;
+        }
+        
         @media (max-width: 640px) {
             .badge-row { gap: 8px; padding: 10px 12px; }
             .badge-item { padding: 4px 10px; font-size: 11px; }
@@ -123,7 +139,7 @@
 <body>
 <div class="header">
     <h1>唐静考研</h1>
-    <p>输入关键词，在唐静老师的考研文章中检索句子</p>
+    <p>输入关键词，在唐静老师的考研文章中检索句子（<span style="color:#2563eb;">✨ 点击句子中任意单词可快速搜索</span>）</p>
     <input type="text" id="searchBox" placeholder="搜索单词或中文关键词..." autofocus>
     <div id="count" class="result-count">正在加载数据库...</div>
 </div>
@@ -172,7 +188,6 @@
     function isInFreq(word)         { return word ? freqSet.has(word.toLowerCase()) : false; }
 
     // 核心：只显示“属于”的类别，使用 Font Awesome 书籍图标，不同颜色
-    // 不显示搜索词本身，只显示“属于xxx”
     function getWordStatusCards(keyword) {
         if (!keyword || keyword.length < 1) return '';
 
@@ -184,7 +199,6 @@
         const inCet4 = isInCet4(lowerKeyword);
         const inCet6 = isInCet6(lowerKeyword);
         
-        // 第一行：考研大纲 & 1200高频词（不显示搜索词）
         const row1Items = [];
         if (inVocab) {
             row1Items.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> 属于考研大纲单词</div>`);
@@ -193,7 +207,6 @@
             row1Items.push(`<div class="badge-item freq"><span class="badge-icon">🔵</span> 属于1200高频词</div>`);
         }
         
-        // 第二行：初中/高中/四级/六级 —— 彩色书籍图标，不同颜色
         const row2Items = [];
         if (inMiddle) {
             row2Items.push(`<div class="badge-item level-middle"><i class="fas fa-book"></i> 属于初中单词</div>`);
@@ -208,7 +221,6 @@
             row2Items.push(`<div class="badge-item level-cet6"><i class="fas fa-book"></i> 属于六级单词</div>`);
         }
 
-        // 如果没有任何属于的单词类别，则整个卡片不显示
         if (row1Items.length === 0 && row2Items.length === 0) {
             return '';
         }
@@ -222,6 +234,41 @@
         }
         html += `</div>`;
         return html;
+    }
+
+    // ========== 单词可点击功能：将句子中的单词变成可点击的span ==========
+    // 生成可点击且带高亮的句子
+    function makeWordsClickableWithHighlight(text, searchKeyword) {
+        if (!text) return '';
+        
+        const lowerKeyword = searchKeyword ? searchKeyword.toLowerCase() : '';
+        
+        // 匹配单词（字母开头，可包含连字符和撇号）
+        return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
+            const lowerMatch = match.toLowerCase();
+            // 如果这个词匹配搜索关键词，则加高亮标记
+            let displayText = match;
+            if (lowerKeyword && lowerMatch === lowerKeyword) {
+                displayText = `<mark>${match}</mark>`;
+            }
+            // 可点击的span包裹
+            return `<span class="clickable-word" data-word="${lowerMatch}">${displayText}</span>`;
+        });
+    }
+
+    // 处理题干选项类文本中的单词可点击
+    function makeTextWordsClickable(text, searchKeyword) {
+        if (!text) return '';
+        const lowerKeyword = searchKeyword ? searchKeyword.toLowerCase() : '';
+        
+        return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
+            const lowerMatch = match.toLowerCase();
+            let displayText = match;
+            if (lowerKeyword && lowerMatch === lowerKeyword) {
+                displayText = `<mark>${match}</mark>`;
+            }
+            return `<span class="clickable-word" data-word="${lowerMatch}">${displayText}</span>`;
+        });
     }
 
     // 加载所有语料库
@@ -296,7 +343,7 @@
         }
     }
 
-    // 异步启动所有词库加载，并支持刷新搜索
+    // 异步启动所有词库加载
     let vocabLoaded = false, freqLoaded = false, middleLoaded = false, highLoaded = false, cet4Loaded = false, cet6Loaded = false;
     
     function tryRefreshSearch() {
@@ -307,7 +354,6 @@
     }
 
     async function initWordListsAndMonitor() {
-        // 并行加载所有词库
         const p1 = loadVocabulary().then(() => { vocabLoaded = true; tryRefreshSearch(); });
         const p2 = loadFreqWords().then(() => { freqLoaded = true; tryRefreshSearch(); });
         const p3 = loadLevelFile('初中单词.txt', middleSchoolSet, '初中单词').then(() => { middleLoaded = true; tryRefreshSearch(); });
@@ -326,6 +372,16 @@
 
     function hasChinese(text) {
         return /[\u4e00-\u9fa5]/.test(text);
+    }
+
+    // 点击单词后搜索该单词
+    function searchWord(word) {
+        if (word && word.length >= 1) {
+            searchBox.value = word;
+            performSearch();
+            // 可选：让页面滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     // 渲染搜索结果的函数
@@ -363,7 +419,6 @@
 
         document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
 
-        // 1) 获取单词状态卡片 (只显示属于的类别)
         let allHtml = getWordStatusCards(query);
         
         if (filtered.length === 0) {
@@ -372,16 +427,17 @@
             return;
         }
 
-        // 2) 渲染每个句子卡片
+        // 渲染每个句子卡片（带可点击单词）
         filtered.forEach(item => {
             if (item.en_q && item.en_opts) {
-                const highlightedEnQ = highlightText(item.en_q, enRegex);
+                // 题干选项类处理
+                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, query);
                 const highlightedCnQ = highlightText(item.cn_q, cnRegex);
                 let optsHtml = '';
                 for (let i = 0; i < item.en_opts.length; i++) {
-                    const highlightedEnOpt = highlightText(item.en_opts[i], enRegex);
+                    const clickableEnOpt = makeTextWordsClickable(item.en_opts[i], query);
                     const highlightedCnOpt = highlightText(item.cn_opts[i] || '', cnRegex);
-                    optsHtml += `<div><span class="opt-en">${highlightedEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
+                    optsHtml += `<div><span class="opt-en">${clickableEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
                 }
                 allHtml += `
                     <div class="card">
@@ -389,14 +445,14 @@
                             <span class="source-tag ${item._sourceClass}">${item._sourceTag}</span>
                             📚 ${item.display_id || item.id}
                         </div>
-                        <div class="en">${highlightedEnQ}</div>
+                        <div class="en">${clickableEnQ}</div>
                         <div class="cn">${highlightedCnQ}</div>
                         <div class="opts">${optsHtml}</div>
                     </div>
                 `;
             } else {
                 const cleanEn = cleanEnglish(item.en || '');
-                const highlightedEn = highlightText(cleanEn, enRegex);
+                const clickableEn = makeWordsClickableWithHighlight(cleanEn, query);
                 const highlightedCn = item.cn ? highlightText(item.cn, cnRegex) : '';
                 const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
 
@@ -406,22 +462,35 @@
                             <span class="source-tag ${item._sourceClass}">${item._sourceTag}</span>
                             📚 ${item.id}
                         </div>
-                        <div class="en">${highlightedEn} ${wordCountHtml}</div>
+                        <div class="en">${clickableEn} ${wordCountHtml}</div>
                         <div class="cn">${highlightedCn}</div>
                     </div>
                 `;
             }
         });
         resultsDiv.innerHTML = allHtml;
+        
+        // 绑定单词点击事件（事件委托）
+        document.querySelectorAll('.clickable-word').forEach(el => {
+            // 移除已有监听器避免重复
+            el.removeEventListener('click', wordClickHandler);
+            el.addEventListener('click', wordClickHandler);
+        });
+    }
+    
+    // 单词点击处理函数
+    function wordClickHandler(e) {
+        e.stopPropagation();
+        const word = this.getAttribute('data-word');
+        if (word) {
+            searchWord(word);
+        }
     }
 
     // 输入监听
     searchBox.addEventListener('input', () => {
         performSearch();
     });
-    
-    // 若词库晚于首次输入加载完成后，自动刷新一次当前搜索结果
-    // 此逻辑已内嵌于各个加载完成后的 tryRefreshSearch 调用中
 </script>
 </body>
 </html>
