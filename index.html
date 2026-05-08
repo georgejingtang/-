@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>唐静考研英语逐句翻译库</title>
-    <!-- Font Awesome 6 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root { --primary-color: #2563eb; --text-main: #1e293b; --text-muted: #64748b; }
@@ -23,7 +22,6 @@
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
         
-        /* 单词状态卡片 */
         .word-status-area {
             background: #ffffff;
             border-radius: 16px;
@@ -32,28 +30,9 @@
             border: 1px solid #eef2ff;
             overflow: hidden;
         }
-        .badge-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: #fcfdff;
-            border-bottom: 1px solid #f0f2f5;
-        }
+        .badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 16px; background: #fcfdff; border-bottom: 1px solid #f0f2f5; }
         .badge-row:last-child { border-bottom: none; }
-        .badge-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 13px;
-            font-weight: 500;
-            background: #f1f5f9;
-            color: #1f2937;
-            transition: all 0.1s ease;
-        }
+        .badge-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 40px; font-size: 13px; font-weight: 500; background: #f1f5f9; color: #1f2937; transition: all 0.1s ease; }
         .badge-item.in { background: #dcfce7; color: #166534; border-left: 3px solid #22c55e; }
         .badge-item.freq { background: #e0f2fe; color: #0c4a6e; border-left: 3px solid #0ea5e9; }
         .badge-item.level-middle { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
@@ -65,22 +44,11 @@
         .badge-item.level-cet6 { background: #f3e5f5; color: #7b1fa2; border-left: 3px solid #9c27b0; }
         .badge-item.level-cet6 i { color: #9c27b0; }
         
-        /* 可点击单词样式 */
-        .clickable-word {
-            cursor: pointer;
-            display: inline-block;
-            border-radius: 4px;
-            padding: 0 1px;
-            transition: background 0.1s ease;
-        }
+        .clickable-word { cursor: pointer; display: inline-block; border-radius: 4px; padding: 0 1px; transition: background 0.1s ease; }
         .clickable-word:hover { background: #e0f2fe; }
         .clickable-word:active { background: #bae6fd; }
         
-        @media (max-width: 640px) {
-            .badge-row { gap: 8px; padding: 10px 12px; }
-            .badge-item { padding: 4px 10px; font-size: 11px; }
-        }
-
+        @media (max-width: 640px) { .badge-row { gap: 8px; padding: 10px 12px; } .badge-item { padding: 4px 10px; font-size: 11px; } }
         .source-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 6px; background: #e0e7ff; color: #3730a3; }
         .source-tag.reading { background: #dbeafe; color: #1e40af; }
         .source-tag.fanyi { background: #fce7f3; color: #9d174d; }
@@ -92,7 +60,7 @@
 <body>
 <div class="header">
     <h1>唐静考研</h1>
-    <p>输入任意词，在05年至今的考研试卷中检索所有句子（✨ 点击搜索结果中任意单词可快速搜索）</p>
+    <p>输入任意词，在05年至今的考研试卷中检索所有句子（✨ 点击结果中任意单词可快速搜索）</p>
     <input type="text" id="searchBox" placeholder="搜索单词或中文关键词..." autofocus>
     <div id="count" class="result-count">正在加载数据库...</div>
 </div>
@@ -149,9 +117,9 @@
         ['go', 'went', 'gone'], ['do', 'did', 'done']
     ];
     for (const [base, past, pastPart] of verbIrregulars) {
-        irregularVerbs.set(base, [base, past, pastPart]);
-        irregularVerbs.set(past, [base, past, pastPart]);
-        irregularVerbs.set(pastPart, [base, past, pastPart]);
+        if (!irregularVerbs.has(base)) irregularVerbs.set(base, [base, past, pastPart]);
+        if (!irregularVerbs.has(past)) irregularVerbs.set(past, [base, past, pastPart]);
+        if (!irregularVerbs.has(pastPart)) irregularVerbs.set(pastPart, [base, past, pastPart]);
     }
 
     // ==================== 不规则名词复数 ====================
@@ -173,51 +141,92 @@
         irregularPlurals.set(plural, singular);
     }
 
-    // ==================== 智能搜索词扩展 ====================
+    // ==================== 核心：双向扩展算法 ====================
+    function generateForwardVariants(root) {
+        const variants = new Set();
+        variants.add(root);
+        if (root.endsWith('y') && !/[aeiou]y$/.test(root)) {
+            variants.add(root.slice(0, -1) + 'ies');
+        } else if (root.endsWith('s') || root.endsWith('sh') || root.endsWith('ch') || root.endsWith('x') || root.endsWith('z')) {
+            variants.add(root + 'es');
+        } else {
+            variants.add(root + 's');
+        }
+        if (root.endsWith('e')) {
+            variants.add(root + 'd');
+        } else {
+            variants.add(root + 'ed');
+            if (/[^aeiou][aeiou][^aeiou]$/.test(root)) {
+                variants.add(root + root.slice(-1) + 'ed');
+            }
+        }
+        if (root.endsWith('e')) {
+            variants.add(root.slice(0, -1) + 'ing');
+        } else if (/[^aeiou][aeiou][^aeiou]$/.test(root)) {
+            variants.add(root + root.slice(-1) + 'ing');
+        } else {
+            variants.add(root + 'ing');
+        }
+        if (root.endsWith('e')) {
+            variants.add(root + 'r');
+        } else {
+            variants.add(root + 'er');
+        }
+        return Array.from(variants);
+    }
+
+    function extractStem(word) {
+        if (word.endsWith('ing') && word.length > 4) {
+            let stem = word.slice(0, -3);
+            if (stem.endsWith('e')) stem = stem.slice(0, -1);
+            if (stem.length > 2) return stem;
+        }
+        if (word.endsWith('ed') && word.length > 3) {
+            let stem = word.slice(0, -2);
+            if (stem.endsWith('e')) stem = stem.slice(0, -1);
+            if (stem.length > 2) return stem;
+            if (stem.length > 1 && stem[stem.length-1] === stem[stem.length-2]) {
+                return stem.slice(0, -1);
+            }
+        }
+        if (word.endsWith('s') && word.length > 2) {
+            let stem = word.slice(0, -1);
+            if (stem.endsWith('e')) return stem;
+            if (word.endsWith('ies')) return word.slice(0, -3) + 'y';
+            if (word.endsWith('ves')) {
+                return word.slice(0, -3) + 'f';
+            }
+        }
+        return word;
+    }
+
     function expandSearchWord(word) {
         const lowerWord = word.toLowerCase();
         const expanded = new Set();
         expanded.add(lowerWord);
         
-        // 1. 英美拼写转换
         if (usUkSpellingMap.has(lowerWord)) {
             expanded.add(usUkSpellingMap.get(lowerWord));
         }
         
-        // 2. 不规则动词处理
         if (irregularVerbs.has(lowerWord)) {
-            const [base, past, pastPart] = irregularVerbs.get(lowerWord);
-            expanded.add(base);
-            expanded.add(past);
-            expanded.add(pastPart);
+            const forms = irregularVerbs.get(lowerWord);
+            forms.forEach(f => expanded.add(f));
         }
-        
-        // 3. 不规则名词复数处理
         if (irregularPlurals.has(lowerWord)) {
             expanded.add(irregularPlurals.get(lowerWord));
         }
         
-        // 4. 规则词形变化（词干提取）
-        if (lowerWord.endsWith('ing') && lowerWord.length > 4) {
-            let stem = lowerWord.slice(0, -3);
-            if (stem.endsWith('e')) stem = stem.slice(0, -1);
-            if (stem.length > 2) expanded.add(stem);
+        const stem = extractStem(lowerWord);
+        if (stem !== lowerWord && stem.length > 2) {
+            expanded.add(stem);
+            const forward = generateForwardVariants(stem);
+            forward.forEach(f => expanded.add(f));
         }
-        if (lowerWord.endsWith('ed') && lowerWord.length > 3) {
-            let stem = lowerWord.slice(0, -2);
-            if (stem.endsWith('e')) stem = stem.slice(0, -1);
-            if (stem.length > 2) expanded.add(stem);
-        }
-        if (lowerWord.endsWith('s') && lowerWord.length > 2) {
-            let stem = lowerWord.slice(0, -1);
-            if (stem.endsWith('e')) expanded.add(stem);
-            if (lowerWord.endsWith('ies')) {
-                expanded.add(lowerWord.slice(0, -3) + 'y');
-            }
-            if (lowerWord.endsWith('ves')) {
-                expanded.add(lowerWord.slice(0, -3) + 'f');
-                expanded.add(lowerWord.slice(0, -3) + 'fe');
-            }
+        
+        if (lowerWord === stem || lowerWord.length < 5) {
+            const forward = generateForwardVariants(lowerWord);
+            forward.forEach(f => expanded.add(f));
         }
         
         return Array.from(expanded);
@@ -238,22 +247,33 @@
         return text.replace(regex, match => `<mark>${match}</mark>`);
     }
 
-    function isInMiddleSchool(word) { return word ? middleSchoolSet.has(word.toLowerCase()) : false; }
-    function isInHighSchool(word)   { return word ? highSchoolSet.has(word.toLowerCase()) : false; }
-    function isInCet4(word)         { return word ? cet4Set.has(word.toLowerCase()) : false; }
-    function isInCet6(word)         { return word ? cet6Set.has(word.toLowerCase()) : false; }
-    function isInVocabulary(word)   { return word ? vocabularySet.has(word.toLowerCase()) : false; }
-    function isInFreq(word)         { return word ? freqSet.has(word.toLowerCase()) : false; }
+    // 归属判定函数（支持扩展）
+    function checkBelonging(word, targetSet) {
+        if (!word) return false;
+        if (targetSet.has(word.toLowerCase())) return true;
+        // 扩展后检查
+        const expanded = expandSearchWord(word);
+        for (const w of expanded) {
+            if (targetSet.has(w)) return true;
+        }
+        return false;
+    }
+
+    function isInMiddleSchool(word) { return checkBelonging(word, middleSchoolSet); }
+    function isInHighSchool(word)   { return checkBelonging(word, highSchoolSet); }
+    function isInCet4(word)         { return checkBelonging(word, cet4Set); }
+    function isInCet6(word)         { return checkBelonging(word, cet6Set); }
+    function isInVocabulary(word)   { return checkBelonging(word, vocabularySet); }
+    function isInFreq(word)         { return checkBelonging(word, freqSet); }
 
     function getWordStatusCards(keyword) {
         if (!keyword || keyword.length < 1) return '';
-        const lowerKeyword = keyword.toLowerCase();
-        const inVocab = isInVocabulary(lowerKeyword);
-        const inFreq = isInFreq(lowerKeyword);
-        const inMiddle = isInMiddleSchool(lowerKeyword);
-        const inHigh = isInHighSchool(lowerKeyword);
-        const inCet4 = isInCet4(lowerKeyword);
-        const inCet6 = isInCet6(lowerKeyword);
+        const inVocab = isInVocabulary(keyword);
+        const inFreq = isInFreq(keyword);
+        const inMiddle = isInMiddleSchool(keyword);
+        const inHigh = isInHighSchool(keyword);
+        const inCet4 = isInCet4(keyword);
+        const inCet6 = isInCet6(keyword);
         
         const row1Items = [];
         if (inVocab) row1Items.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> 属于考研大纲单词</div>`);
@@ -273,12 +293,12 @@
         return html;
     }
 
-    // 生成可点击且带高亮的句子
-    function makeWordsClickableWithHighlight(text, searchTermsSet) {
+    function makeWordsClickableWithHighlight(text, highlightSet) {
         if (!text) return '';
+        if (!highlightSet || highlightSet.size === 0) return text;
         return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
             const lowerMatch = match.toLowerCase();
-            const isMatch = searchTermsSet.has(lowerMatch);
+            const isMatch = highlightSet.has(lowerMatch);
             let displayText = match;
             if (isMatch) {
                 displayText = `<mark>${match}</mark>`;
@@ -393,18 +413,17 @@
         }
 
         const isChinese = hasChinese(query);
+        let expandedSet = new Set();
         let searchTermsForFilter = [query];
-        let searchTermsForHighlight = new Set();
         
         if (!isChinese && query.match(/^[a-zA-Z]+$/)) {
             const expanded = expandSearchWord(query);
             searchTermsForFilter = expanded;
-            expanded.forEach(term => searchTermsForHighlight.add(term));
+            expanded.forEach(term => expandedSet.add(term));
         } else {
-            searchTermsForHighlight.add(query);
+            expandedSet.add(query);
         }
         
-        // 构建正则表达式用于过滤
         let enRegex = null;
         if (!isChinese) {
             const escapedTerms = searchTermsForFilter.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -418,12 +437,10 @@
             if (item.cn) cnTexts.push(item.cn);
             if (item.cn_q) cnTexts.push(item.cn_q);
             if (item.cn_opts) cnTexts.push(...item.cn_opts);
-
             const enTexts = [];
             if (item.en) enTexts.push(cleanEnglish(item.en));
             if (item.en_q) enTexts.push(item.en_q);
             if (item.en_opts) enTexts.push(...item.en_opts);
-
             if (isChinese) {
                 return cnTexts.some(text => cnRegex.test(text));
             } else {
@@ -435,7 +452,6 @@
         });
 
         document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
-
         let allHtml = getWordStatusCards(query);
         
         if (filtered.length === 0) {
@@ -446,11 +462,11 @@
 
         filtered.forEach(item => {
             if (item.en_q && item.en_opts) {
-                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, searchTermsForHighlight);
+                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, expandedSet);
                 const highlightedCnQ = highlightText(item.cn_q, cnRegex);
                 let optsHtml = '';
                 for (let i = 0; i < item.en_opts.length; i++) {
-                    const clickableEnOpt = makeWordsClickableWithHighlight(item.en_opts[i], searchTermsForHighlight);
+                    const clickableEnOpt = makeWordsClickableWithHighlight(item.en_opts[i], expandedSet);
                     const highlightedCnOpt = highlightText(item.cn_opts[i] || '', cnRegex);
                     optsHtml += `<div><span class="opt-en">${clickableEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
                 }
@@ -467,10 +483,9 @@
                 `;
             } else {
                 const cleanEn = cleanEnglish(item.en || '');
-                const clickableEn = makeWordsClickableWithHighlight(cleanEn, searchTermsForHighlight);
+                const clickableEn = makeWordsClickableWithHighlight(cleanEn, expandedSet);
                 const highlightedCn = item.cn ? highlightText(item.cn, cnRegex) : '';
                 const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
-
                 allHtml += `
                     <div class="card">
                         <div class="source-id">
