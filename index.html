@@ -23,7 +23,6 @@
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
         
-        /* 单词状态卡片 - 只有正面结果，两行排列 */
         .word-status-area {
             background: #ffffff;
             border-radius: 16px;
@@ -66,7 +65,6 @@
             color: #0c4a6e;
             border-left: 3px solid #0ea5e9;
         }
-        /* 不同级别 - 使用 Font Awesome 书籍图标，颜色不同 */
         .badge-item.level-middle {
             background: #e8f5e9;
             color: #2e7d32;
@@ -108,7 +106,6 @@
             width: 14px;
         }
         
-        /* 可点击单词样式 */
         .clickable-word {
             cursor: pointer;
             display: inline-block;
@@ -146,7 +143,6 @@
 <div id="results"></div>
 
 <script>
-    // JSON 语料库配置
     const JSON_FILES = [
         { name: '1reading.json', tag: '阅读', tagClass: 'reading' },
         { name: '2fanyi.json', tag: '翻译', tagClass: 'fanyi' },
@@ -156,15 +152,13 @@
     ];
 
     let corpus = [];
-    // 词库 Sets
-    let vocabularySet = new Set();   // 考研大纲
-    let freqSet = new Set();         // 1200高频词
-    let middleSchoolSet = new Set(); // 初中单词
-    let highSchoolSet = new Set();   // 高中单词
-    let cet4Set = new Set();         // 四级单词
-    let cet6Set = new Set();         // 六级单词
+    let vocabularySet = new Set();
+    let freqSet = new Set();
+    let middleSchoolSet = new Set();
+    let highSchoolSet = new Set();
+    let cet4Set = new Set();
+    let cet6Set = new Set();
 
-    // 辅助函数
     function extractWordCount(enText) {
         const match = enText.match(/\((\d+)\s*words\)/i);
         return match ? match[1] : null;
@@ -174,12 +168,6 @@
         return enText.replace(/\(\d+\s*words\)/gi, '').trim();
     }
 
-    function highlightText(text, regex) {
-        if (!regex || !text) return text;
-        return text.replace(regex, match => `<mark>${match}</mark>`);
-    }
-
-    // 检查各级别包含关系
     function isInMiddleSchool(word) { return word ? middleSchoolSet.has(word.toLowerCase()) : false; }
     function isInHighSchool(word)   { return word ? highSchoolSet.has(word.toLowerCase()) : false; }
     function isInCet4(word)         { return word ? cet4Set.has(word.toLowerCase()) : false; }
@@ -187,7 +175,6 @@
     function isInVocabulary(word)   { return word ? vocabularySet.has(word.toLowerCase()) : false; }
     function isInFreq(word)         { return word ? freqSet.has(word.toLowerCase()) : false; }
 
-    // 核心：只显示“属于”的类别，使用 Font Awesome 书籍图标，不同颜色
     function getWordStatusCards(keyword) {
         if (!keyword || keyword.length < 1) return '';
 
@@ -200,78 +187,73 @@
         const inCet6 = isInCet6(lowerKeyword);
         
         const row1Items = [];
-        if (inVocab) {
-            row1Items.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> 属于考研大纲单词</div>`);
-        }
-        if (inFreq) {
-            row1Items.push(`<div class="badge-item freq"><span class="badge-icon">🔵</span> 属于1200高频词</div>`);
-        }
+        if (inVocab) row1Items.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> 属于考研大纲单词</div>`);
+        if (inFreq) row1Items.push(`<div class="badge-item freq"><span class="badge-icon">🔵</span> 属于1200高频词</div>`);
         
         const row2Items = [];
-        if (inMiddle) {
-            row2Items.push(`<div class="badge-item level-middle"><i class="fas fa-book"></i> 属于初中单词</div>`);
-        }
-        if (inHigh) {
-            row2Items.push(`<div class="badge-item level-high"><i class="fas fa-book"></i> 属于高中单词</div>`);
-        }
-        if (inCet4) {
-            row2Items.push(`<div class="badge-item level-cet4"><i class="fas fa-book"></i> 属于四级单词</div>`);
-        }
-        if (inCet6) {
-            row2Items.push(`<div class="badge-item level-cet6"><i class="fas fa-book"></i> 属于六级单词</div>`);
-        }
+        if (inMiddle) row2Items.push(`<div class="badge-item level-middle"><i class="fas fa-book"></i> 属于初中单词</div>`);
+        if (inHigh) row2Items.push(`<div class="badge-item level-high"><i class="fas fa-book"></i> 属于高中单词</div>`);
+        if (inCet4) row2Items.push(`<div class="badge-item level-cet4"><i class="fas fa-book"></i> 属于四级单词</div>`);
+        if (inCet6) row2Items.push(`<div class="badge-item level-cet6"><i class="fas fa-book"></i> 属于六级单词</div>`);
 
-        if (row1Items.length === 0 && row2Items.length === 0) {
-            return '';
-        }
+        if (row1Items.length === 0 && row2Items.length === 0) return '';
 
         let html = `<div class="word-status-area">`;
-        if (row1Items.length > 0) {
-            html += `<div class="badge-row">${row1Items.join('')}</div>`;
-        }
-        if (row2Items.length > 0) {
-            html += `<div class="badge-row">${row2Items.join('')}</div>`;
-        }
+        if (row1Items.length > 0) html += `<div class="badge-row">${row1Items.join('')}</div>`;
+        if (row2Items.length > 0) html += `<div class="badge-row">${row2Items.join('')}</div>`;
         html += `</div>`;
         return html;
     }
 
-    // ========== 单词可点击功能：将句子中的单词变成可点击的span ==========
-    // 生成可点击且带高亮的句子
+    // 将句子中的单词变成可点击的span，同时高亮匹配搜索词的单词（包括变体）
     function makeWordsClickableWithHighlight(text, searchKeyword) {
         if (!text) return '';
         
         const lowerKeyword = searchKeyword ? searchKeyword.toLowerCase() : '';
         
-        // 匹配单词（字母开头，可包含连字符和撇号）
+        // 匹配单词及其变体（字母开头，可包含连字符和撇号）
         return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
             const lowerMatch = match.toLowerCase();
-            // 如果这个词匹配搜索关键词，则加高亮标记
+            // 检查是否匹配搜索词（包括变体：如 patent 匹配 patents, patented）
+            let isMatch = false;
+            if (lowerKeyword) {
+                // 如果搜索词长度大于3，匹配以搜索词开头的单词（处理变体）
+                if (lowerKeyword.length >= 3) {
+                    isMatch = lowerMatch === lowerKeyword || lowerMatch.startsWith(lowerKeyword);
+                } else {
+                    isMatch = lowerMatch === lowerKeyword;
+                }
+            }
             let displayText = match;
-            if (lowerKeyword && lowerMatch === lowerKeyword) {
+            if (isMatch) {
                 displayText = `<mark>${match}</mark>`;
             }
-            // 可点击的span包裹
             return `<span class="clickable-word" data-word="${lowerMatch}">${displayText}</span>`;
         });
     }
 
-    // 处理题干选项类文本中的单词可点击
     function makeTextWordsClickable(text, searchKeyword) {
         if (!text) return '';
         const lowerKeyword = searchKeyword ? searchKeyword.toLowerCase() : '';
         
         return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
             const lowerMatch = match.toLowerCase();
+            let isMatch = false;
+            if (lowerKeyword) {
+                if (lowerKeyword.length >= 3) {
+                    isMatch = lowerMatch === lowerKeyword || lowerMatch.startsWith(lowerKeyword);
+                } else {
+                    isMatch = lowerMatch === lowerKeyword;
+                }
+            }
             let displayText = match;
-            if (lowerKeyword && lowerMatch === lowerKeyword) {
+            if (isMatch) {
                 displayText = `<mark>${match}</mark>`;
             }
             return `<span class="clickable-word" data-word="${lowerMatch}">${displayText}</span>`;
         });
     }
 
-    // 加载所有语料库
     async function loadAllData() {
         corpus = [];
         for (const file of JSON_FILES) {
@@ -292,7 +274,6 @@
         document.getElementById('count').innerText = `共加载 ${corpus.length} 条记录`;
     }
 
-    // ---------- 加载所有单词库 ----------
     async function loadVocabulary() {
         try {
             const response = await fetch('大纲.txt');
@@ -303,7 +284,7 @@
                     if (word && !word.includes('/') && !word.startsWith('#')) vocabularySet.add(word);
                 });
                 console.log(`✅ 考研大纲: ${vocabularySet.size} 个单词`);
-            } else console.warn('⚠️ 大纲.txt 加载失败');
+            }
         } catch (error) { console.error('大纲单词表加载失败:', error); }
     }
 
@@ -317,7 +298,7 @@
                     if (word && !word.includes('/') && !word.startsWith('#')) freqSet.add(word);
                 });
                 console.log(`✅ 1200高频词: ${freqSet.size} 个`);
-            } else console.warn('⚠️ 1200.txt 加载失败');
+            }
         } catch (error) { console.error('1200高频词表加载失败:', error); }
     }
 
@@ -326,45 +307,30 @@
             const response = await fetch(fileName);
             if (response.ok) {
                 const text = await response.text();
-                let count = 0;
                 text.split(/\r?\n/).forEach(line => {
                     let word = line.trim().toLowerCase();
                     if (word && !word.includes('/') && !word.startsWith('#') && !word.includes(' ')) {
                         targetSet.add(word);
-                        count++;
                     }
                 });
-                console.log(`✅ ${levelName}: ${targetSet.size} 个单词 (${fileName})`);
-            } else {
-                console.warn(`⚠️ ${fileName} 加载失败，该等级暂不可用`);
+                console.log(`✅ ${levelName}: ${targetSet.size} 个单词`);
             }
-        } catch (error) {
-            console.error(`${levelName} 文件加载错误:`, error);
-        }
+        } catch (error) { console.error(`${levelName} 加载错误:`, error); }
     }
 
-    // 异步启动所有词库加载
-    let vocabLoaded = false, freqLoaded = false, middleLoaded = false, highLoaded = false, cet4Loaded = false, cet6Loaded = false;
-    
-    function tryRefreshSearch() {
-        const query = searchBox.value.trim();
-        if (query.length >= 2) {
-            performSearch();
-        }
-    }
-
-    async function initWordListsAndMonitor() {
-        const p1 = loadVocabulary().then(() => { vocabLoaded = true; tryRefreshSearch(); });
-        const p2 = loadFreqWords().then(() => { freqLoaded = true; tryRefreshSearch(); });
-        const p3 = loadLevelFile('初中单词.txt', middleSchoolSet, '初中单词').then(() => { middleLoaded = true; tryRefreshSearch(); });
-        const p4 = loadLevelFile('高中单词.txt', highSchoolSet, '高中单词').then(() => { highLoaded = true; tryRefreshSearch(); });
-        const p5 = loadLevelFile('四级.txt', cet4Set, '四级单词').then(() => { cet4Loaded = true; tryRefreshSearch(); });
-        const p6 = loadLevelFile('六级.txt', cet6Set, '六级单词').then(() => { cet6Loaded = true; tryRefreshSearch(); });
-        await Promise.all([p1, p2, p3, p4, p5, p6]);
+    async function initWordLists() {
+        await Promise.all([
+            loadVocabulary(),
+            loadFreqWords(),
+            loadLevelFile('初中单词.txt', middleSchoolSet, '初中单词'),
+            loadLevelFile('高中单词.txt', highSchoolSet, '高中单词'),
+            loadLevelFile('四级.txt', cet4Set, '四级单词'),
+            loadLevelFile('六级.txt', cet6Set, '六级单词')
+        ]);
         console.log('所有词库加载完毕');
     }
 
-    initWordListsAndMonitor();
+    initWordLists();
     loadAllData();
 
     const searchBox = document.getElementById('searchBox');
@@ -374,17 +340,14 @@
         return /[\u4e00-\u9fa5]/.test(text);
     }
 
-    // 点击单词后搜索该单词
     function searchWord(word) {
         if (word && word.length >= 1) {
             searchBox.value = word;
             performSearch();
-            // 可选：让页面滚动到顶部
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
-    // 渲染搜索结果的函数
     function performSearch() {
         const query = searchBox.value.trim();
         resultsDiv.innerHTML = '';
@@ -396,7 +359,8 @@
 
         const isChinese = hasChinese(query);
         const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const enRegex = isChinese ? null : new RegExp(`\\b${escapedQuery}[a-zA-Z]*\\b`, 'gi');
+        // 修复：匹配单词及其变体（如 patent, patents, patented）
+        const enRegex = isChinese ? null : new RegExp(`\\b${escapedQuery}[a-z]*\\b`, 'gi');
         const cnRegex = new RegExp(escapedQuery, 'gi');
 
         const filtered = corpus.filter(item => {
@@ -427,10 +391,8 @@
             return;
         }
 
-        // 渲染每个句子卡片（带可点击单词）
         filtered.forEach(item => {
             if (item.en_q && item.en_opts) {
-                // 题干选项类处理
                 const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, query);
                 const highlightedCnQ = highlightText(item.cn_q, cnRegex);
                 let optsHtml = '';
@@ -470,15 +432,13 @@
         });
         resultsDiv.innerHTML = allHtml;
         
-        // 绑定单词点击事件（事件委托）
+        // 绑定单词点击事件
         document.querySelectorAll('.clickable-word').forEach(el => {
-            // 移除已有监听器避免重复
             el.removeEventListener('click', wordClickHandler);
             el.addEventListener('click', wordClickHandler);
         });
     }
     
-    // 单词点击处理函数
     function wordClickHandler(e) {
         e.stopPropagation();
         const word = this.getAttribute('data-word');
@@ -487,7 +447,12 @@
         }
     }
 
-    // 输入监听
+    // 辅助高亮函数
+    function highlightText(text, regex) {
+        if (!regex || !text) return text;
+        return text.replace(regex, match => `<mark>${match}</mark>`);
+    }
+
     searchBox.addEventListener('input', () => {
         performSearch();
     });
