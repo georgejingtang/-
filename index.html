@@ -28,6 +28,7 @@
         .source-tag.reading { background: #dbeafe; color: #1e40af; }
         .source-tag.fanyi { background: #fce7f3; color: #9d174d; }
         .source-tag.wanxing { background: #d1fae5; color: #065f46; }
+        .source-tag.xintixing { background: #fed7aa; color: #9a3412; }
         .source-tag.tigang { background: #fef3c7; color: #92400e; }
     </style>
 </head>
@@ -41,10 +42,12 @@
 <div id="results"></div>
 
 <script>
+    // 修改这里：添加 5xintixing.json，放在 3wanxing.json 后面
     const JSON_FILES = [
         { name: '1reading.json', tag: '阅读', tagClass: 'reading' },
         { name: '2fanyi.json', tag: '翻译', tagClass: 'fanyi' },
         { name: '3wanxing.json', tag: '完型', tagClass: 'wanxing' },
+        { name: '5xintixing.json', tag: '新题型', tagClass: 'xintixing' },
         { name: '4tiganxuanxiang.json', tag: '题干选项', tagClass: 'tigang' }
     ];
 
