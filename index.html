@@ -137,6 +137,7 @@
     function isInFreq(word)         { return word ? freqSet.has(word.toLowerCase()) : false; }
 
     // 核心：只显示“属于”的类别，不显示“不属于”；第一行: 考研大纲 & 1200高频词；第二行: 初中·高中·四级·六级
+    // 图标：考研大纲用🎯，1200高频词用🔵，初中📘，高中📙，四级🔹，六级🔸
     function getWordStatusCards(keyword) {
         if (!keyword || keyword.length < 1) return '';
 
@@ -154,22 +155,22 @@
             row1Items.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> “${keyword}” 属于考研大纲单词</div>`);
         }
         if (inFreq) {
-            row1Items.push(`<div class="badge-item freq"><span class="badge-icon">🎯</span> “${keyword}” 属于1200高频词</div>`);
+            row1Items.push(`<div class="badge-item freq"><span class="badge-icon">🔵</span> “${keyword}” 属于1200高频词</div>`);
         }
         
-        // 第二行：初中/高中/四级/六级 只显示属于的
+        // 第二行：初中/高中/四级/六级 只显示属于的，保留原有好看图标
         const row2Items = [];
         if (inMiddle) {
-            row2Items.push(`<div class="badge-item level"><span class="badge-icon">🎯</span> 属于初中单词</div>`);
+            row2Items.push(`<div class="badge-item level"><span class="badge-icon">📘</span> 属于初中单词</div>`);
         }
         if (inHigh) {
-            row2Items.push(`<div class="badge-item level"><span class="badge-icon">🎯</span> 属于高中单词</div>`);
+            row2Items.push(`<div class="badge-item level"><span class="badge-icon">📙</span> 属于高中单词</div>`);
         }
         if (inCet4) {
-            row2Items.push(`<div class="badge-item level"><span class="badge-icon">🎯</span> 属于四级单词</div>`);
+            row2Items.push(`<div class="badge-item level"><span class="badge-icon">🔹</span> 属于四级单词</div>`);
         }
         if (inCet6) {
-            row2Items.push(`<div class="badge-item level"><span class="badge-icon">🎯</span> 属于六级单词</div>`);
+            row2Items.push(`<div class="badge-item level"><span class="badge-icon">🔸</span> 属于六级单词</div>`);
         }
 
         // 如果没有任何属于的单词类别，则整个卡片不显示（保持界面简洁）
