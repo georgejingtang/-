@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>唐静考研英语逐句翻译库</title>
-    <!-- Font Awesome 6 -->
+    <!-- Font Awesome 6 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* ... (您的CSS样式保持不变) ... */
         :root { --primary-color: #2563eb; --text-main: #1e293b; --text-muted: #64748b; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text-main); max-width: 850px; margin: 0 auto; padding: 20px; background: #f8fafc; }
         .header { text-align: center; margin-bottom: 30px; padding: 20px 0; }
@@ -24,6 +23,7 @@
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
         
+        /* 单词状态卡片 */
         .word-status-area {
             background: #ffffff;
             border-radius: 16px;
@@ -32,25 +32,55 @@
             border: 1px solid #eef2ff;
             overflow: hidden;
         }
-        .badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 16px; background: #fcfdff; border-bottom: 1px solid #f0f2f5; }
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fcfdff;
+            border-bottom: 1px solid #f0f2f5;
+        }
         .badge-row:last-child { border-bottom: none; }
-        .badge-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 40px; font-size: 13px; font-weight: 500; background: #f1f5f9; color: #1f2937; transition: all 0.1s ease; }
+        .badge-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            background: #f1f5f9;
+            color: #1f2937;
+            transition: all 0.1s ease;
+        }
         .badge-item.in { background: #dcfce7; color: #166534; border-left: 3px solid #22c55e; }
         .badge-item.freq { background: #e0f2fe; color: #0c4a6e; border-left: 3px solid #0ea5e9; }
         .badge-item.level-middle { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
-        .badge-item.level-middle i { color: #4caf50; font-size: 14px; width: 14px; }
+        .badge-item.level-middle i { color: #4caf50; }
         .badge-item.level-high { background: #fff3e0; color: #ef6c00; border-left: 3px solid #ff9800; }
-        .badge-item.level-high i { color: #ff9800; font-size: 14px; width: 14px; }
+        .badge-item.level-high i { color: #ff9800; }
         .badge-item.level-cet4 { background: #e3f2fd; color: #1565c0; border-left: 3px solid #2196f3; }
-        .badge-item.level-cet4 i { color: #2196f3; font-size: 14px; width: 14px; }
+        .badge-item.level-cet4 i { color: #2196f3; }
         .badge-item.level-cet6 { background: #f3e5f5; color: #7b1fa2; border-left: 3px solid #9c27b0; }
-        .badge-item.level-cet6 i { color: #9c27b0; font-size: 14px; width: 14px; }
+        .badge-item.level-cet6 i { color: #9c27b0; }
         
-        .clickable-word { cursor: pointer; display: inline-block; border-radius: 4px; padding: 0 1px; transition: background 0.1s ease; }
+        /* 可点击单词样式 */
+        .clickable-word {
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 4px;
+            padding: 0 1px;
+            transition: background 0.1s ease;
+        }
         .clickable-word:hover { background: #e0f2fe; }
         .clickable-word:active { background: #bae6fd; }
         
-        @media (max-width: 640px) { .badge-row { gap: 8px; padding: 10px 12px; } .badge-item { padding: 4px 10px; font-size: 11px; } }
+        @media (max-width: 640px) {
+            .badge-row { gap: 8px; padding: 10px 12px; }
+            .badge-item { padding: 4px 10px; font-size: 11px; }
+        }
+
         .source-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 6px; background: #e0e7ff; color: #3730a3; }
         .source-tag.reading { background: #dbeafe; color: #1e40af; }
         .source-tag.fanyi { background: #fce7f3; color: #9d174d; }
@@ -62,14 +92,14 @@
 <body>
 <div class="header">
     <h1>唐静考研</h1>
-    <p>输入关键词，在唐静老师的考研文章中检索句子（<span style="color:#2563eb;">✨ 点击句子中任意单词可快速搜索</span>）</p>
+    <p>输入任意词，在05年至今的考研试卷中检索所有句子（✨ 点击搜索结果中任意单词可快速搜索）</p>
     <input type="text" id="searchBox" placeholder="搜索单词或中文关键词..." autofocus>
     <div id="count" class="result-count">正在加载数据库...</div>
 </div>
 <div id="results"></div>
 
 <script>
-    // ==================== 配置与全局变量 ====================
+    // ==================== 配置 ====================
     const JSON_FILES = [
         { name: '1reading.json', tag: '阅读', tagClass: 'reading' },
         { name: '2fanyi.json', tag: '翻译', tagClass: 'fanyi' },
@@ -86,6 +116,113 @@
     let cet4Set = new Set();
     let cet6Set = new Set();
 
+    // ==================== 英美拼写映射 ====================
+    const usUkSpellingMap = new Map();
+    const spellingPairs = [
+        ['behavior', 'behaviour'], ['color', 'colour'], ['favor', 'favour'], ['honor', 'honour'],
+        ['neighbor', 'neighbour'], ['labor', 'labour'], ['organize', 'organise'], ['realize', 'realise'],
+        ['analyze', 'analyse'], ['center', 'centre'], ['theater', 'theatre'], ['meter', 'metre'],
+        ['defense', 'defence'], ['offense', 'offence'], ['license', 'licence'], ['practice', 'practise'],
+        ['traveling', 'travelling'], ['traveled', 'travelled'], ['canceled', 'cancelled'],
+        ['modeling', 'modelling'], ['marvelous', 'marvellous']
+    ];
+    for (const [us, uk] of spellingPairs) {
+        usUkSpellingMap.set(us, uk);
+        usUkSpellingMap.set(uk, us);
+    }
+
+    // ==================== 不规则动词映射 ====================
+    const irregularVerbs = new Map();
+    const verbIrregulars = [
+        ['lead', 'led', 'led'], ['bear', 'bore', 'borne'], ['begin', 'began', 'begun'],
+        ['break', 'broke', 'broken'], ['choose', 'chose', 'chosen'], ['speak', 'spoke', 'spoken'],
+        ['steal', 'stole', 'stolen'], ['wear', 'wore', 'worn'], ['write', 'wrote', 'written'],
+        ['drive', 'drove', 'driven'], ['ride', 'rode', 'ridden'], ['rise', 'rose', 'risen'],
+        ['shake', 'shook', 'shaken'], ['take', 'took', 'taken'], ['mistake', 'mistook', 'mistaken'],
+        ['give', 'gave', 'given'], ['forgive', 'forgave', 'forgiven'], ['see', 'saw', 'seen'],
+        ['fall', 'fell', 'fallen'], ['forget', 'forgot', 'forgotten'], ['get', 'got', 'gotten'],
+        ['eat', 'ate', 'eaten'], ['beat', 'beat', 'beaten'], ['hide', 'hid', 'hidden'],
+        ['bite', 'bit', 'bitten'], ['freeze', 'froze', 'frozen'], ['know', 'knew', 'known'],
+        ['grow', 'grew', 'grown'], ['throw', 'threw', 'thrown'], ['fly', 'flew', 'flown'],
+        ['draw', 'drew', 'drawn'], ['show', 'showed', 'shown'], ['sew', 'sewed', 'sewn'],
+        ['sow', 'sowed', 'sown'], ['tear', 'tore', 'torn'], ['swear', 'swore', 'sworn'],
+        ['go', 'went', 'gone'], ['do', 'did', 'done']
+    ];
+    for (const [base, past, pastPart] of verbIrregulars) {
+        irregularVerbs.set(base, [base, past, pastPart]);
+        irregularVerbs.set(past, [base, past, pastPart]);
+        irregularVerbs.set(pastPart, [base, past, pastPart]);
+    }
+
+    // ==================== 不规则名词复数 ====================
+    const irregularPlurals = new Map();
+    const pluralPairs = [
+        ['agency', 'agencies'], ['analysis', 'analyses'], ['basis', 'bases'],
+        ['crisis', 'crises'], ['criterion', 'criteria'], ['datum', 'data'],
+        ['focus', 'foci'], ['fungus', 'fungi'], ['nucleus', 'nuclei'],
+        ['stimulus', 'stimuli'], ['syllabus', 'syllabi'], ['thesis', 'theses'],
+        ['phenomenon', 'phenomena'], ['medium', 'media'], ['memorandum', 'memoranda'],
+        ['appendix', 'appendices'], ['index', 'indices'], ['matrix', 'matrices'],
+        ['ox', 'oxen'], ['child', 'children'], ['man', 'men'], ['woman', 'women'],
+        ['foot', 'feet'], ['tooth', 'teeth'], ['goose', 'geese'], ['mouse', 'mice'],
+        ['louse', 'lice'], ['person', 'people'], ['leaf', 'leaves'], ['wife', 'wives'],
+        ['knife', 'knives'], ['life', 'lives'], ['shelf', 'shelves'], ['thief', 'thieves']
+    ];
+    for (const [singular, plural] of pluralPairs) {
+        irregularPlurals.set(singular, plural);
+        irregularPlurals.set(plural, singular);
+    }
+
+    // ==================== 智能搜索词扩展 ====================
+    function expandSearchWord(word) {
+        const lowerWord = word.toLowerCase();
+        const expanded = new Set();
+        expanded.add(lowerWord);
+        
+        // 1. 英美拼写转换
+        if (usUkSpellingMap.has(lowerWord)) {
+            expanded.add(usUkSpellingMap.get(lowerWord));
+        }
+        
+        // 2. 不规则动词处理
+        if (irregularVerbs.has(lowerWord)) {
+            const [base, past, pastPart] = irregularVerbs.get(lowerWord);
+            expanded.add(base);
+            expanded.add(past);
+            expanded.add(pastPart);
+        }
+        
+        // 3. 不规则名词复数处理
+        if (irregularPlurals.has(lowerWord)) {
+            expanded.add(irregularPlurals.get(lowerWord));
+        }
+        
+        // 4. 规则词形变化（词干提取）
+        if (lowerWord.endsWith('ing') && lowerWord.length > 4) {
+            let stem = lowerWord.slice(0, -3);
+            if (stem.endsWith('e')) stem = stem.slice(0, -1);
+            if (stem.length > 2) expanded.add(stem);
+        }
+        if (lowerWord.endsWith('ed') && lowerWord.length > 3) {
+            let stem = lowerWord.slice(0, -2);
+            if (stem.endsWith('e')) stem = stem.slice(0, -1);
+            if (stem.length > 2) expanded.add(stem);
+        }
+        if (lowerWord.endsWith('s') && lowerWord.length > 2) {
+            let stem = lowerWord.slice(0, -1);
+            if (stem.endsWith('e')) expanded.add(stem);
+            if (lowerWord.endsWith('ies')) {
+                expanded.add(lowerWord.slice(0, -3) + 'y');
+            }
+            if (lowerWord.endsWith('ves')) {
+                expanded.add(lowerWord.slice(0, -3) + 'f');
+                expanded.add(lowerWord.slice(0, -3) + 'fe');
+            }
+        }
+        
+        return Array.from(expanded);
+    }
+
     // ==================== 辅助函数 ====================
     function extractWordCount(enText) {
         const match = enText.match(/\((\d+)\s*words\)/i);
@@ -96,6 +233,11 @@
         return enText.replace(/\(\d+\s*words\)/gi, '').trim();
     }
 
+    function highlightText(text, regex) {
+        if (!regex || !text) return text;
+        return text.replace(regex, match => `<mark>${match}</mark>`);
+    }
+
     function isInMiddleSchool(word) { return word ? middleSchoolSet.has(word.toLowerCase()) : false; }
     function isInHighSchool(word)   { return word ? highSchoolSet.has(word.toLowerCase()) : false; }
     function isInCet4(word)         { return word ? cet4Set.has(word.toLowerCase()) : false; }
@@ -103,56 +245,8 @@
     function isInVocabulary(word)   { return word ? vocabularySet.has(word.toLowerCase()) : false; }
     function isInFreq(word)         { return word ? freqSet.has(word.toLowerCase()) : false; }
 
-    // 生成单词的常见变体，用于增强搜索和高亮
-    function generateWordVariants(word) {
-        const variants = new Set();
-        const lowerWord = word.toLowerCase();
-        variants.add(lowerWord);
-        
-        // 规则1: 加 s / es / ies
-        if (lowerWord.endsWith('y') && !/[aeiou]y$/.test(lowerWord)) {
-            variants.add(lowerWord.slice(0, -1) + 'ies');
-        } else if (lowerWord.endsWith('s') || lowerWord.endsWith('sh') || lowerWord.endsWith('ch') || lowerWord.endsWith('x') || lowerWord.endsWith('z')) {
-            variants.add(lowerWord + 'es');
-        } else {
-            variants.add(lowerWord + 's');
-        }
-        
-        // 规则2: 加 ed / d (过去式)
-        if (lowerWord.endsWith('e')) {
-            variants.add(lowerWord + 'd');
-        } else {
-            variants.add(lowerWord + 'ed');
-            // 处理重读闭音节双写末尾字母 + ed (简化版，如 stop -> stopped)
-            if (/[^aeiou][aeiou][^aeiou]$/.test(lowerWord)) {
-                variants.add(lowerWord + lowerWord.slice(-1) + 'ed');
-            }
-        }
-        
-        // 规则3: 加 ing (现在分词)
-        if (lowerWord.endsWith('e')) {
-            variants.add(lowerWord.slice(0, -1) + 'ing'); // 去 e + ing: smoke -> smoking
-        } else if (/[^aeiou][aeiou][^aeiou]$/.test(lowerWord)) {
-            variants.add(lowerWord + lowerWord.slice(-1) + 'ing'); // 双写: stop -> stopping
-        } else {
-            variants.add(lowerWord + 'ing');
-        }
-        
-        // 规则4: 加 er / or (名词)
-        if (lowerWord.endsWith('e')) {
-            variants.add(lowerWord + 'r');
-        } else {
-            variants.add(lowerWord + 'er');
-        }
-        
-        // 清理并返回数组
-        return Array.from(variants).filter(v => v !== lowerWord);
-    }
-
-    // 获取词库状态卡片
     function getWordStatusCards(keyword) {
         if (!keyword || keyword.length < 1) return '';
-
         const lowerKeyword = keyword.toLowerCase();
         const inVocab = isInVocabulary(lowerKeyword);
         const inFreq = isInFreq(lowerKeyword);
@@ -172,7 +266,6 @@
         if (inCet6) row2Items.push(`<div class="badge-item level-cet6"><i class="fas fa-book"></i> 属于六级单词</div>`);
 
         if (row1Items.length === 0 && row2Items.length === 0) return '';
-
         let html = `<div class="word-status-area">`;
         if (row1Items.length > 0) html += `<div class="badge-row">${row1Items.join('')}</div>`;
         if (row2Items.length > 0) html += `<div class="badge-row">${row2Items.join('')}</div>`;
@@ -180,42 +273,12 @@
         return html;
     }
 
-    // 高亮文本（用于中文）
-    function highlightText(text, regex) {
-        if (!regex || !text) return text;
-        return text.replace(regex, match => `<mark>${match}</mark>`);
-    }
-
-    // ==================== 核心：可点击单词 + 智能高亮 ====================
-    function makeWordsClickableWithHighlight(text, searchKeyword, searchVariants = []) {
+    // 生成可点击且带高亮的句子
+    function makeWordsClickableWithHighlight(text, searchTermsSet) {
         if (!text) return '';
-        
-        const lowerKeyword = searchKeyword ? searchKeyword.toLowerCase() : '';
-        const variantSet = new Set(searchVariants.map(v => v.toLowerCase()));
-        if (lowerKeyword) variantSet.add(lowerKeyword);
-        
-        // 匹配单词（字母开头，可包含连字符和撇号）
         return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
             const lowerMatch = match.toLowerCase();
-            // 检查是否匹配搜索词或其变体
-            const isMatch = variantSet.has(lowerMatch);
-            let displayText = match;
-            if (isMatch) {
-                displayText = `<mark>${match}</mark>`;
-            }
-            return `<span class="clickable-word" data-word="${lowerMatch}">${displayText}</span>`;
-        });
-    }
-
-    function makeTextWordsClickable(text, searchKeyword, searchVariants = []) {
-        if (!text) return '';
-        const lowerKeyword = searchKeyword ? searchKeyword.toLowerCase() : '';
-        const variantSet = new Set(searchVariants.map(v => v.toLowerCase()));
-        if (lowerKeyword) variantSet.add(lowerKeyword);
-        
-        return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
-            const lowerMatch = match.toLowerCase();
-            const isMatch = variantSet.has(lowerMatch);
+            const isMatch = searchTermsSet.has(lowerMatch);
             let displayText = match;
             if (isMatch) {
                 displayText = `<mark>${match}</mark>`;
@@ -330,26 +393,26 @@
         }
 
         const isChinese = hasChinese(query);
-        let searchVariants = [];
-        let searchWordsForFilter = [query];
+        let searchTermsForFilter = [query];
+        let searchTermsForHighlight = new Set();
         
-        // 如果是英文搜索，生成词形变体用于匹配和高亮
         if (!isChinese && query.match(/^[a-zA-Z]+$/)) {
-            searchVariants = generateWordVariants(query);
-            searchWordsForFilter = [query, ...searchVariants];
+            const expanded = expandSearchWord(query);
+            searchTermsForFilter = expanded;
+            expanded.forEach(term => searchTermsForHighlight.add(term));
+        } else {
+            searchTermsForHighlight.add(query);
         }
         
-        // 构建正则表达式，匹配原词或任何变体
+        // 构建正则表达式用于过滤
         let enRegex = null;
         if (!isChinese) {
-            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // 匹配以原词开头的变体，或者直接匹配变体列表
-            const pattern = searchWordsForFilter.map(w => `\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).join('|');
+            const escapedTerms = searchTermsForFilter.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            const pattern = escapedTerms.map(term => `\\b${term}\\b`).join('|');
             enRegex = new RegExp(`(${pattern})`, 'gi');
         }
         const cnRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
 
-        // 过滤语料
         const filtered = corpus.filter(item => {
             const cnTexts = [];
             if (item.cn) cnTexts.push(item.cn);
@@ -364,8 +427,10 @@
             if (isChinese) {
                 return cnTexts.some(text => cnRegex.test(text));
             } else {
-                // 使用增强后的正则表达式进行匹配
-                return enTexts.some(text => enRegex ? enRegex.test(text) : text.toLowerCase().includes(query.toLowerCase()));
+                return enTexts.some(text => {
+                    const lowerText = text.toLowerCase();
+                    return searchTermsForFilter.some(term => lowerText.includes(term));
+                });
             }
         });
 
@@ -379,14 +444,13 @@
             return;
         }
 
-        // 渲染每个句子
         filtered.forEach(item => {
             if (item.en_q && item.en_opts) {
-                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, query, searchVariants);
+                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, searchTermsForHighlight);
                 const highlightedCnQ = highlightText(item.cn_q, cnRegex);
                 let optsHtml = '';
                 for (let i = 0; i < item.en_opts.length; i++) {
-                    const clickableEnOpt = makeTextWordsClickable(item.en_opts[i], query, searchVariants);
+                    const clickableEnOpt = makeWordsClickableWithHighlight(item.en_opts[i], searchTermsForHighlight);
                     const highlightedCnOpt = highlightText(item.cn_opts[i] || '', cnRegex);
                     optsHtml += `<div><span class="opt-en">${clickableEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
                 }
@@ -403,7 +467,7 @@
                 `;
             } else {
                 const cleanEn = cleanEnglish(item.en || '');
-                const clickableEn = makeWordsClickableWithHighlight(cleanEn, query, searchVariants);
+                const clickableEn = makeWordsClickableWithHighlight(cleanEn, searchTermsForHighlight);
                 const highlightedCn = item.cn ? highlightText(item.cn, cnRegex) : '';
                 const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
 
@@ -421,7 +485,6 @@
         });
         resultsDiv.innerHTML = allHtml;
         
-        // 绑定单词点击事件
         document.querySelectorAll('.clickable-word').forEach(el => {
             el.removeEventListener('click', wordClickHandler);
             el.addEventListener('click', wordClickHandler);
