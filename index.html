@@ -114,7 +114,8 @@
         ['grow', 'grew', 'grown'], ['throw', 'threw', 'thrown'], ['fly', 'flew', 'flown'],
         ['draw', 'drew', 'drawn'], ['show', 'showed', 'shown'], ['sew', 'sewed', 'sewn'],
         ['sow', 'sowed', 'sown'], ['tear', 'tore', 'torn'], ['swear', 'swore', 'sworn'],
-        ['go', 'went', 'gone'], ['do', 'did', 'done']
+        ['go', 'went', 'gone'], ['do', 'did', 'done'],
+        ['consider', 'considered', 'considered'], ['harness', 'harnessed', 'harnessed']
     ];
     for (const [base, past, pastPart] of verbIrregulars) {
         if (!irregularVerbs.has(base)) irregularVerbs.set(base, [base, past, pastPart]);
@@ -170,7 +171,7 @@
         } else {
             variants.add(root + 'ing');
         }
-        // 加 er / or
+        // 加 er / or (名词形式)
         if (root.endsWith('e')) {
             variants.add(root + 'r');
         } else {
@@ -180,11 +181,13 @@
     }
 
     function extractStem(word) {
+        // 去 ing
         if (word.endsWith('ing') && word.length > 4) {
             let stem = word.slice(0, -3);
             if (stem.endsWith('e')) stem = stem.slice(0, -1);
             if (stem.length > 2) return stem;
         }
+        // 去 ed
         if (word.endsWith('ed') && word.length > 3) {
             let stem = word.slice(0, -2);
             if (stem.endsWith('e')) stem = stem.slice(0, -1);
@@ -193,6 +196,7 @@
                 return stem.slice(0, -1);
             }
         }
+        // 去 s / es / ies
         if (word.endsWith('ies') && word.length > 3) {
             return word.slice(0, -3) + 'y';
         }
@@ -206,48 +210,74 @@
         return word;
     }
 
-    // 核心函数：获取单词的完整家族（用于动词）
+    // ==================== 核心修复：统一的词族扩展函数 ====================
+    function getBaseForm(word) {
+        const lowerWord = word.toLowerCase();
+        
+        // 1. 不规则动词表映射
+        if (irregularVerbs.has(lowerWord)) {
+            // 返回原形（表中存储的第一个元素）
+            return irregularVerbs.get(lowerWord)[0];
+        }
+        
+        // 2. 名词复数映射
+        if (irregularPlurals.has(lowerWord)) {
+            return irregularPlurals.get(lowerWord);
+        }
+        
+        // 3. 规则变化提取词干
+        const stem = extractStem(lowerWord);
+        if (stem !== lowerWord && stem.length > 2) {
+            return stem;
+        }
+        
+        // 4. 原样返回
+        return lowerWord;
+    }
+
     function getWordFamily(word) {
         const lowerWord = word.toLowerCase();
         const family = new Set();
         
-        // 1. 先尝试从不规则动词表获取
-        if (irregularVerbs.has(lowerWord)) {
-            const forms = irregularVerbs.get(lowerWord);
+        // 第一步：无论输入什么，都映射到标准原形
+        const baseForm = getBaseForm(lowerWord);
+        
+        // 第二步：添加原形
+        family.add(baseForm);
+        
+        // 第三步：从原形正向生成所有规则变体
+        const forward = generateForwardVariants(baseForm);
+        forward.forEach(f => family.add(f));
+        
+        // 第四步：如果是不规则动词，添加所有不规则形式
+        if (irregularVerbs.has(baseForm)) {
+            const forms = irregularVerbs.get(baseForm);
             forms.forEach(f => family.add(f));
         }
         
-        // 2. 提取词干
-        const stem = extractStem(lowerWord);
-        
-        if (stem !== lowerWord && stem.length > 2) {
-            // 如果提取出了不同的词干，则添加词干及其所有变体
-            family.add(stem);
-            const forward = generateForwardVariants(stem);
-            forward.forEach(f => family.add(f));
-        } else if (stem.length > 2) {
-            // 词干就是原词，正向生成所有变体
-            family.add(stem);
-            const forward = generateForwardVariants(stem);
-            forward.forEach(f => family.add(f));
+        // 第五步：如果是名词复数，确保单数形式也在集合中
+        if (irregularPlurals.has(lowerWord)) {
+            family.add(irregularPlurals.get(lowerWord));
+        }
+        if (irregularPlurals.has(baseForm)) {
+            family.add(irregularPlurals.get(baseForm));
         }
         
-        // 3. 确保原词也在集合中
+        // 第六步：英美拼写变体
+        if (usUkSpellingMap.has(baseForm)) {
+            family.add(usUkSpellingMap.get(baseForm));
+        }
+        
+        // 第七步：确保原输入词在集合中（防止遗漏）
         family.add(lowerWord);
         
-        // 4. 处理英美拼写变体
-        if (usUkSpellingMap.has(lowerWord)) {
-            family.add(usUkSpellingMap.get(lowerWord));
-        }
-        const stemLower = stem.toLowerCase();
-        if (stemLower !== lowerWord && usUkSpellingMap.has(stemLower)) {
-            family.add(usUkSpellingMap.get(stemLower));
-        }
+        // 调试输出（可以在控制台查看扩展结果）
+        // console.log(`扩展 "${word}" → 家族 [${Array.from(family).join(', ')}]`);
         
         return Array.from(family);
     }
 
-    // 简化的扩展函数（用于单词归属判定）
+    // 简写函数
     function expandSearchWord(word) {
         return getWordFamily(word);
     }
