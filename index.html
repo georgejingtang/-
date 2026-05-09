@@ -12,7 +12,7 @@
         .header h1 { font-size: 2.2rem; color: #0f172a; margin-bottom: 10px; }
         #searchBox { width: 100%; padding: 15px 25px; font-size: 18px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); box-sizing: border-box; }
         #searchBox:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .result-count { margin-top: 15px; font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .result-count { margin-top: 15px; font-size: 14px; color: var(--text-muted); font-weight: 500; height: 20px; }
         .card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #f1f5f9; }
         .source-id { font-size: 13px; color: #6366f1; font-weight: bold; margin-bottom: 10px; background: #eef2ff; display: inline-block; padding: 4px 10px; border-radius: 6px; }
         .en { font-size: 19px; font-weight: 600; color: #0f172a; margin-bottom: 12px; line-height: 1.4; }
@@ -21,53 +21,38 @@
         .opts { margin-top: 8px; padding-left: 15px; font-size: 15px; color: #475569; line-height: 1.8; }
         mark { background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px; font-weight: bold; }
         .no-result { text-align: center; color: var(--text-muted); margin-top: 50px; }
-        
-        .word-status-area {
-            background: #ffffff;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            border: 1px solid #eef2ff;
-            overflow: hidden;
-        }
+        .word-status-area { background: #ffffff; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #eef2ff; overflow: hidden; }
         .badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 16px; background: #fcfdff; border-bottom: 1px solid #f0f2f5; }
         .badge-row:last-child { border-bottom: none; }
-        .badge-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 40px; font-size: 13px; font-weight: 500; background: #f1f5f9; color: #1f2937; transition: all 0.1s ease; }
+        .badge-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 40px; font-size: 13px; font-weight: 500; background: #f1f5f9; color: #1f2937; }
         .badge-item.in { background: #dcfce7; color: #166534; border-left: 3px solid #22c55e; }
         .badge-item.freq { background: #e0f2fe; color: #0c4a6e; border-left: 3px solid #0ea5e9; }
-        .badge-item.level-middle { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
-        .badge-item.level-middle i { color: #4caf50; }
-        .badge-item.level-high { background: #fff3e0; color: #ef6c00; border-left: 3px solid #ff9800; }
-        .badge-item.level-high i { color: #ff9800; }
-        .badge-item.level-cet4 { background: #e3f2fd; color: #1565c0; border-left: 3px solid #2196f3; }
-        .badge-item.level-cet4 i { color: #2196f3; }
-        .badge-item.level-cet6 { background: #f3e5f5; color: #7b1fa2; border-left: 3px solid #9c27b0; }
-        .badge-item.level-cet6 i { color: #9c27b0; }
-        
+        /* 彩色书籍图标样式 */
+        .badge-item.middle i { color: #4caf50; }
+        .badge-item.high i { color: #ff9800; }
+        .badge-item.cet4 i { color: #2196f3; }
+        .badge-item.cet6 i { color: #9c27b0; }
         .clickable-word { cursor: pointer; display: inline-block; border-radius: 4px; padding: 0 1px; transition: background 0.1s ease; }
-        .clickable-word:hover { background: #e0f2fe; }
-        .clickable-word:active { background: #bae6fd; }
-        
-        @media (max-width: 640px) { .badge-row { gap: 8px; padding: 10px 12px; } .badge-item { padding: 4px 10px; font-size: 11px; } }
-        .source-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 6px; background: #e0e7ff; color: #3730a3; }
+        .clickable-word:hover { background: #e0f2fe; color: var(--primary-color); }
+        .source-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 6px; }
         .source-tag.reading { background: #dbeafe; color: #1e40af; }
         .source-tag.fanyi { background: #fce7f3; color: #9d174d; }
         .source-tag.wanxing { background: #d1fae5; color: #065f46; }
         .source-tag.xintixing { background: #fed7aa; color: #9a3412; }
         .source-tag.tigang { background: #fef3c7; color: #92400e; }
+        @media (max-width: 640px) { body { padding: 15px; } .card { padding: 18px; } .en { font-size: 17px; } }
     </style>
 </head>
 <body>
 <div class="header">
-    <h1>唐静考研</h1>
-    <p>输入任意词，在05年至今的考研试卷中搜索（✨ 点击结果中任意单词可快速搜索）</p>
-    <input type="text" id="searchBox" placeholder="搜索单词或中文关键词..." autofocus>
-    <div id="count" class="result-count">正在加载数据库...</div>
+    <h1>唐静考研英语</h1>
+    <p>🔍 搜索单词原形或变形，自动匹配所有时态/复数/英美拼写</p>
+    <input type="text" id="searchBox" placeholder="正在加载词库..." disabled autofocus>
+    <div id="count" class="result-count">初始化中...</div>
 </div>
 <div id="results"></div>
 
 <script>
-    // ==================== 配置 ====================
     const JSON_FILES = [
         { name: '1reading.json', tag: '阅读', tagClass: 'reading' },
         { name: '2fanyi.json', tag: '翻译', tagClass: 'fanyi' },
@@ -77,447 +62,249 @@
     ];
 
     let corpus = [];
-    let vocabularySet = new Set();
-    let freqSet = new Set();
-    let middleSchoolSet = new Set();
-    let highSchoolSet = new Set();
-    let cet4Set = new Set();
-    let cet6Set = new Set();
-
-    // ==================== 英美拼写映射 ====================
+    const sets = { vocabulary: new Set(), freq: new Set(), middle: new Set(), high: new Set(), cet4: new Set(), cet6: new Set() };
     const usUkSpellingMap = new Map();
-    const spellingPairs = [
-        ['behavior', 'behaviour'], ['color', 'colour'], ['favor', 'favour'], ['honor', 'honour'],
-        ['neighbor', 'neighbour'], ['labor', 'labour'], ['organize', 'organise'], ['realize', 'realise'],
-        ['analyze', 'analyse'], ['center', 'centre'], ['theater', 'theatre'], ['meter', 'metre'],
-        ['defense', 'defence'], ['offense', 'offence'], ['license', 'licence'], ['practice', 'practise'],
-        ['traveling', 'travelling'], ['traveled', 'travelled'], ['canceled', 'cancelled'],
-        ['modeling', 'modelling'], ['marvelous', 'marvellous']
-    ];
-    for (const [us, uk] of spellingPairs) {
-        usUkSpellingMap.set(us, uk);
-        usUkSpellingMap.set(uk, us);
-    }
-
-    // ==================== 不规则动词映射 ====================
     const irregularVerbMap = new Map();
-    const irregulars = [
-        ['lead', 'led', 'led'], ['bear', 'bore', 'borne'], ['begin', 'began', 'begun'],
-        ['break', 'broke', 'broken'], ['choose', 'chose', 'chosen'], ['speak', 'spoke', 'spoken'],
-        ['steal', 'stole', 'stolen'], ['wear', 'wore', 'worn'], ['write', 'wrote', 'written'],
-        ['drive', 'drove', 'driven'], ['ride', 'rode', 'ridden'], ['rise', 'rose', 'risen'],
-        ['shake', 'shook', 'shaken'], ['take', 'took', 'taken'], ['mistake', 'mistook', 'mistaken'],
-        ['give', 'gave', 'given'], ['forgive', 'forgave', 'forgiven'], ['see', 'saw', 'seen'],
-        ['fall', 'fell', 'fallen'], ['forget', 'forgot', 'forgotten'], ['get', 'got', 'gotten'],
-        ['eat', 'ate', 'eaten'], ['beat', 'beat', 'beaten'], ['hide', 'hid', 'hidden'],
-        ['bite', 'bit', 'bitten'], ['freeze', 'froze', 'frozen'], ['know', 'knew', 'known'],
-        ['grow', 'grew', 'grown'], ['throw', 'threw', 'thrown'], ['fly', 'flew', 'flown'],
-        ['draw', 'drew', 'drawn'], ['show', 'showed', 'shown'], ['sew', 'sewed', 'sewn'],
-        ['sow', 'sowed', 'sown'], ['tear', 'tore', 'torn'], ['swear', 'swore', 'sworn'],
-        ['go', 'went', 'gone'], ['do', 'did', 'done']
-    ];
-    for (const [base, past, pastPart] of irregulars) {
-        irregularVerbMap.set(base, base);
-        irregularVerbMap.set(past, base);
-        irregularVerbMap.set(pastPart, base);
-    }
-
-    // ==================== 规则动词变体映射 ====================
-    const regularMappings = {
-        'looking': 'look', 'looked': 'look',
-        'talking': 'talk', 'talked': 'talk',
-        'walking': 'walk', 'walked': 'walk',
-        'working': 'work', 'worked': 'work',
-        'asking': 'ask', 'asked': 'ask',
-        'helping': 'help', 'helped': 'help',
-        'watching': 'watch', 'watched': 'watch',
-        'considering': 'consider', 'considered': 'consider',
-        'providing': 'provide', 'provided': 'provide',
-        'creating': 'create', 'created': 'create',
-        'continuing': 'continue', 'continued': 'continue',
-        'including': 'include', 'included': 'include',
-        'involving': 'involve', 'involved': 'involve',
-        'producing': 'produce', 'produced': 'produce',
-        'developing': 'develop', 'developed': 'develop',
-        'requiring': 'require', 'required': 'require',
-        'using': 'use', 'used': 'use',
-        'making': 'make', 'made': 'make',
-        'taking': 'take', 'taken': 'take',
-        'giving': 'give', 'given': 'give',
-        'writing': 'write', 'written': 'write'
-    };
-    for (const [form, base] of Object.entries(regularMappings)) {
-        if (!irregularVerbMap.has(form)) {
-            irregularVerbMap.set(form, base);
-        }
-    }
-
-    // ==================== 不规则名词复数 ====================
     const irregularPluralMap = new Map();
-    const pluralPairs = [
-        ['agency', 'agencies'], ['analysis', 'analyses'], ['basis', 'bases'],
-        ['crisis', 'crises'], ['criterion', 'criteria'], ['datum', 'data'],
-        ['focus', 'foci'], ['fungus', 'fungi'], ['nucleus', 'nuclei'],
-        ['stimulus', 'stimuli'], ['syllabus', 'syllabi'], ['thesis', 'theses'],
-        ['phenomenon', 'phenomena'], ['medium', 'media'], ['memorandum', 'memoranda'],
-        ['appendix', 'appendices'], ['index', 'indices'], ['matrix', 'matrices'],
-        ['ox', 'oxen'], ['child', 'children'], ['man', 'men'], ['woman', 'women'],
-        ['foot', 'feet'], ['tooth', 'teeth'], ['goose', 'geese'], ['mouse', 'mice'],
-        ['louse', 'lice'], ['person', 'people'], ['leaf', 'leaves'], ['wife', 'wives'],
-        ['knife', 'knives'], ['life', 'lives'], ['shelf', 'shelves'], ['thief', 'thieves']
-    ];
-    for (const [singular, plural] of pluralPairs) {
-        irregularPluralMap.set(singular, plural);
-        irregularPluralMap.set(plural, singular);
+
+    function initMappings() {
+        const spellingPairs = [
+            ['behavior', 'behaviour'], ['color', 'colour'], ['favor', 'favour'], ['honor', 'honour'],
+            ['neighbor', 'neighbour'], ['labor', 'labour'], ['organize', 'organise'], ['realize', 'realise'],
+            ['analyze', 'analyse'], ['center', 'centre'], ['theater', 'theatre'], ['meter', 'metre'],
+            ['defense', 'defence'], ['offense', 'offence'], ['license', 'licence'], ['practice', 'practise'],
+            ['traveling', 'travelling']
+        ];
+        spellingPairs.forEach(([us, uk]) => { usUkSpellingMap.set(us, uk); usUkSpellingMap.set(uk, us); });
+
+        const irregulars = [
+            ['think', 'thought', 'thought'], ['keep', 'kept', 'kept'], ['find', 'found', 'found'], ['seek', 'sought', 'sought'],
+            ['lead', 'led', 'led'], ['bear', 'bore', 'borne'], ['begin', 'began', 'begun'], ['break', 'broke', 'broken'], 
+            ['choose', 'chose', 'chosen'], ['speak', 'spoke', 'spoken'], ['steal', 'stole', 'stolen'], ['wear', 'wore', 'worn'], 
+            ['write', 'wrote', 'written'], ['drive', 'drove', 'driven'], ['see', 'saw', 'seen'], ['give', 'gave', 'given'],
+            ['go', 'went', 'gone'], ['do', 'did', 'done'], ['buy', 'bought', 'bought'], ['bring', 'brought', 'brought'],
+            ['catch', 'caught', 'caught'], ['teach', 'taught', 'taught'], ['fight', 'fought', 'fought'],
+            ['sing', 'sang', 'sung'], ['ring', 'rang', 'rung'], ['swim', 'swam', 'swum']
+        ];
+        irregulars.forEach(([base, past, pastPart]) => { 
+            irregularVerbMap.set(base, base); 
+            irregularVerbMap.set(past, base); 
+            if(pastPart) irregularVerbMap.set(pastPart, base); 
+        });
+
+        const plurals = [
+            ['analysis', 'analyses'], ['basis', 'bases'], ['crisis', 'crises'], ['criterion', 'criteria'],
+            ['datum', 'data'], ['phenomenon', 'phenomena'], ['medium', 'media'], ['child', 'children'],
+            ['man', 'men'], ['woman', 'women'], ['foot', 'feet'], ['tooth', 'teeth'], ['person', 'people'],
+            ['leaf', 'leaves'], ['knife', 'knives'], ['life', 'lives'], ['shelf', 'shelves']
+        ];
+        plurals.forEach(([s, p]) => { irregularPluralMap.set(s, p); irregularPluralMap.set(p, s); });
     }
 
-    // ==================== 获取完整词族（用于搜索和高亮）====================
     function getWordFamily(word) {
         const lowerWord = word.toLowerCase();
         const family = new Set();
-        
-        // 1. 获取原形
         let baseForm = lowerWord;
-        if (irregularVerbMap.has(lowerWord)) {
-            baseForm = irregularVerbMap.get(lowerWord);
-        } else if (irregularPluralMap.has(lowerWord)) {
-            baseForm = irregularPluralMap.get(lowerWord);
+
+        // 1. 寻找词根 (Lemmatization)
+        if (irregularVerbMap.has(lowerWord)) baseForm = irregularVerbMap.get(lowerWord);
+        else if (irregularPluralMap.has(lowerWord)) baseForm = irregularPluralMap.get(lowerWord);
+        else {
+            if (lowerWord.endsWith('ies') && lowerWord.length > 3) baseForm = lowerWord.slice(0, -3) + 'y';
+            else if (lowerWord.endsWith('ing')) {
+                let stem = lowerWord.slice(0, -3);
+                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) baseForm = stem.slice(0, -1);
+                else baseForm = stem;
+            }
+            else if (lowerWord.endsWith('ed')) {
+                let stem = lowerWord.slice(0, -2);
+                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) baseForm = stem.slice(0, -1);
+                else baseForm = stem;
+            }
+            else if (lowerWord.endsWith('es')) baseForm = lowerWord.slice(0, -2);
+            else if (lowerWord.endsWith('s') && !lowerWord.endsWith('ss')) baseForm = lowerWord.slice(0, -1);
         }
+
         family.add(baseForm);
-        
-        // 2. 添加原形的常见变体
-        // 加 s
-        if (baseForm.endsWith('y') && !/[aeiou]y$/.test(baseForm)) {
-            family.add(baseForm.slice(0, -1) + 'ies');
-        } else if (baseForm.endsWith('s') || baseForm.endsWith('sh') || baseForm.endsWith('ch') || baseForm.endsWith('x') || baseForm.endsWith('z')) {
-            family.add(baseForm + 'es');
-        } else {
-            family.add(baseForm + 's');
-        }
-        // 加 ed
+        family.add(lowerWord);
+
+        // 2. 派生变形
+        if (baseForm.endsWith('y') && !/[aeiou]y$/.test(baseForm)) family.add(baseForm.slice(0, -1) + 'ies');
+        else if (/[sxz]$|sh$|ch$/.test(baseForm)) family.add(baseForm + 'es');
+        else family.add(baseForm + 's');
+
         if (baseForm.endsWith('e')) {
             family.add(baseForm + 'd');
-        } else {
-            family.add(baseForm + 'ed');
-        }
-        // 加 ing
-        if (baseForm.endsWith('e')) {
             family.add(baseForm.slice(0, -1) + 'ing');
         } else {
+            family.add(baseForm + 'ed');
             family.add(baseForm + 'ing');
-        }
-        
-        // 3. 添加不规则动词的所有形式
-        for (const [form, base] of irregularVerbMap.entries()) {
-            if (base === baseForm) {
-                family.add(form);
+            if (/[^aeiou][aeiou][^aeiou]$/.test(baseForm)) {
+                let last = baseForm.slice(-1);
+                family.add(baseForm + last + 'ing');
+                family.add(baseForm + last + 'ed');
             }
         }
-        
-        // 4. 添加复数形式
-        for (const [singular, plural] of pluralPairs) {
-            if (singular === baseForm) family.add(plural);
-            if (plural === baseForm) family.add(singular);
-        }
-        
-        // 5. 英美拼写
-        if (usUkSpellingMap.has(baseForm)) {
-            family.add(usUkSpellingMap.get(baseForm));
-        }
-        
+
+        // 3. 关联不规则映射
+        for (const [v, r] of irregularVerbMap.entries()) if (r === baseForm) family.add(v);
+        for (const [v, r] of irregularPluralMap.entries()) if (r === baseForm) family.add(v);
+        if (usUkSpellingMap.has(baseForm)) family.add(usUkSpellingMap.get(baseForm));
+
         return Array.from(family);
     }
 
-    // ==================== 辅助函数 ====================
-    function extractWordCount(enText) {
-        const match = enText.match(/\((\d+)\s*words\)/i);
-        return match ? match[1] : null;
-    }
+    function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function hasChinese(text) { return /[\u4e00-\u9fa5]/.test(text); }
+    function cleanEnglish(enText) { return (enText || '').replace(/\(\s*\d+\s*words\s*\)/gi, '').trim(); }
 
-    function cleanEnglish(enText) {
-        return enText.replace(/\(\d+\s*words\)/gi, '').trim();
-    }
-
-    function highlightText(text, regex) {
-        if (!regex || !text) return text;
-        return text.replace(regex, match => `<mark>${match}</mark>`);
-    }
-
-    // 归属判定
-    function checkBelonging(word, targetSet) {
-        if (!word) return false;
-        if (targetSet.has(word.toLowerCase())) return true;
-        const family = getWordFamily(word);
-        for (const w of family) {
-            if (targetSet.has(w)) return true;
-        }
-        return false;
-    }
-
-    function isInMiddleSchool(word) { return checkBelonging(word, middleSchoolSet); }
-    function isInHighSchool(word)   { return checkBelonging(word, highSchoolSet); }
-    function isInCet4(word)         { return checkBelonging(word, cet4Set); }
-    function isInCet6(word)         { return checkBelonging(word, cet6Set); }
-    function isInVocabulary(word)   { return checkBelonging(word, vocabularySet); }
-    function isInFreq(word)         { return checkBelonging(word, freqSet); }
-
-    function getWordStatusCards(keyword) {
-        if (!keyword || keyword.length < 1) return '';
-        const inVocab = isInVocabulary(keyword);
-        const inFreq = isInFreq(keyword);
-        const inMiddle = isInMiddleSchool(keyword);
-        const inHigh = isInHighSchool(keyword);
-        const inCet4 = isInCet4(keyword);
-        const inCet6 = isInCet6(keyword);
-        
-        const row1Items = [];
-        if (inVocab) row1Items.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> 属于考研大纲单词</div>`);
-        if (inFreq) row1Items.push(`<div class="badge-item freq"><span class="badge-icon">🔵</span> 属于1200高频词</div>`);
-        
-        const row2Items = [];
-        if (inMiddle) row2Items.push(`<div class="badge-item level-middle"><i class="fas fa-book"></i> 属于初中单词</div>`);
-        if (inHigh) row2Items.push(`<div class="badge-item level-high"><i class="fas fa-book"></i> 属于高中单词</div>`);
-        if (inCet4) row2Items.push(`<div class="badge-item level-cet4"><i class="fas fa-book"></i> 属于四级单词</div>`);
-        if (inCet6) row2Items.push(`<div class="badge-item level-cet6"><i class="fas fa-book"></i> 属于六级单词</div>`);
-
-        if (row1Items.length === 0 && row2Items.length === 0) return '';
-        let html = `<div class="word-status-area">`;
-        if (row1Items.length > 0) html += `<div class="badge-row">${row1Items.join('')}</div>`;
-        if (row2Items.length > 0) html += `<div class="badge-row">${row2Items.join('')}</div>`;
-        html += `</div>`;
-        return html;
-    }
-
-    // 生成可点击的单词（同时高亮匹配的单词）
-    function makeWordsClickableWithHighlight(text, highlightFamily) {
+    function makeWordsClickable(text, highlightFamily, isChineseSearch) {
         if (!text) return '';
-        if (!highlightFamily || highlightFamily.size === 0) return text;
-        
         return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
             const lowerMatch = match.toLowerCase();
-            const isMatch = highlightFamily.has(lowerMatch);
-            let displayText = match;
-            if (isMatch) {
-                displayText = `<mark>${match}</mark>`;
-            }
+            const isMatch = !isChineseSearch && highlightFamily && highlightFamily.has(lowerMatch);
+            const displayText = isMatch ? `<mark>${match}</mark>` : match;
             return `<span class="clickable-word" data-word="${lowerMatch}">${displayText}</span>`;
         });
     }
 
-    // ==================== 数据加载 ====================
-    async function loadAllData() {
-        corpus = [];
-        for (const file of JSON_FILES) {
-            try {
-                const response = await fetch(file.name);
-                if (!response.ok) { console.warn(`⚠️ ${file.name} 加载失败`); continue; }
-                const data = await response.json();
-                const items = Array.isArray(data) ? data : [data];
-                items.forEach(item => {
-                    item._sourceTag = file.tag;
-                    item._sourceClass = file.tagClass;
-                    item._wordCount = extractWordCount(item.en || '');
-                });
-                corpus = corpus.concat(items);
-                console.log(`✅ 已加载 ${file.name} (${items.length} 条)`);
-            } catch (error) { console.error(`${file.name} 加载失败:`, error); }
-        }
-        document.getElementById('count').innerText = `共加载 ${corpus.length} 条记录`;
-    }
-
-    async function loadVocabulary() {
-        try {
-            const response = await fetch('大纲.txt');
-            if (response.ok) {
-                const text = await response.text();
-                text.split(/\r?\n/).forEach(line => {
-                    let word = line.trim().toLowerCase();
-                    if (word && !word.includes('/') && !word.startsWith('#')) vocabularySet.add(word);
-                });
-                console.log(`✅ 考研大纲: ${vocabularySet.size} 个单词`);
-            }
-        } catch (error) { console.error('大纲单词表加载失败:', error); }
-    }
-
-    async function loadFreqWords() {
-        try {
-            const response = await fetch('1200.txt');
-            if (response.ok) {
-                const text = await response.text();
-                text.split(/\r?\n/).forEach(line => {
-                    let word = line.trim().toLowerCase();
-                    if (word && !word.includes('/') && !word.startsWith('#')) freqSet.add(word);
-                });
-                console.log(`✅ 1200高频词: ${freqSet.size} 个`);
-            }
-        } catch (error) { console.error('1200高频词表加载失败:', error); }
-    }
-
-    async function loadLevelFile(fileName, targetSet, levelName) {
-        try {
-            const response = await fetch(fileName);
-            if (response.ok) {
-                const text = await response.text();
-                text.split(/\r?\n/).forEach(line => {
-                    let word = line.trim().toLowerCase();
-                    if (word && !word.includes('/') && !word.startsWith('#') && !word.includes(' ')) {
-                        targetSet.add(word);
-                    }
-                });
-                console.log(`✅ ${levelName}: ${targetSet.size} 个单词`);
-            }
-        } catch (error) { console.error(`${levelName} 加载错误:`, error); }
-    }
-
-    async function initWordLists() {
-        await Promise.all([
-            loadVocabulary(),
-            loadFreqWords(),
-            loadLevelFile('初中单词.txt', middleSchoolSet, '初中单词'),
-            loadLevelFile('高中单词.txt', highSchoolSet, '高中单词'),
-            loadLevelFile('四级.txt', cet4Set, '四级单词'),
-            loadLevelFile('六级.txt', cet6Set, '六级单词')
-        ]);
-        console.log('所有词库加载完毕');
-    }
-
-    initWordLists();
-    loadAllData();
-
-    // ==================== 搜索与渲染 ====================
-    const searchBox = document.getElementById('searchBox');
-    const resultsDiv = document.getElementById('results');
-
-    function hasChinese(text) {
-        return /[\u4e00-\u9fa5]/.test(text);
-    }
-
-    function searchWord(word) {
-        if (word && word.length >= 1) {
-            searchBox.value = word;
-            performSearch();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
+    function highlightText(text, regex) { return (!regex || !text) ? text : text.replace(regex, match => `<mark>${match}</mark>`); }
 
     function performSearch() {
         const query = searchBox.value.trim();
-        resultsDiv.innerHTML = '';
-
+        const resultsDiv = document.getElementById('results');
         if (query.length < 2) {
-            document.getElementById('count').innerText = query.length === 1 ? "请输入至少2个字符" : `共加载 ${corpus.length} 条记录`;
+            resultsDiv.innerHTML = '';
+            document.getElementById('count').innerText = query.length === 1 ? "请输入至少2个字符" : `共 ${corpus.length} 条记录`;
             return;
         }
 
         const isChinese = hasChinese(query);
-        
-        let wordFamily = [];
         let highlightFamily = new Set();
-        
-        if (!isChinese && query.match(/^[a-zA-Z]+$/)) {
-            wordFamily = getWordFamily(query);
-            wordFamily.forEach(term => highlightFamily.add(term));
-            console.log(`搜索 "${query}" → 扩展词族: [${wordFamily.join(', ')}]`);
-        } else {
-            wordFamily = [query];
-            highlightFamily.add(query);
-        }
-        
-        // 构建精确匹配的正则表达式（精确匹配词族中的每个词）
         let enRegex = null;
-        if (!isChinese) {
-            const escapedTerms = wordFamily.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-            const pattern = escapedTerms.map(term => `\\b${term}\\b`).join('|');
+
+        if (!isChinese && /^[a-zA-Z'-]+$/.test(query)) {
+            const family = getWordFamily(query);
+            family.forEach(f => highlightFamily.add(f));
+            const pattern = family.map(f => `\\b${escapeRegExp(f)}\\b`).join('|');
             enRegex = new RegExp(pattern, 'gi');
         }
-        const cnRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
 
-        // 过滤语料
+        const cnRegex = new RegExp(escapeRegExp(query), 'gi');
+
         const filtered = corpus.filter(item => {
-            const cnTexts = [];
-            if (item.cn) cnTexts.push(item.cn);
-            if (item.cn_q) cnTexts.push(item.cn_q);
-            if (item.cn_opts) cnTexts.push(...item.cn_opts);
-            const enTexts = [];
-            if (item.en) enTexts.push(cleanEnglish(item.en));
-            if (item.en_q) enTexts.push(item.en_q);
-            if (item.en_opts) enTexts.push(...item.en_opts);
-            
-            if (isChinese) {
-                return cnTexts.some(text => cnRegex.test(text));
-            } else {
-                if (!enRegex) return false;
-                return enTexts.some(text => enRegex.test(text));
-            }
+            const target = [item.en, item.cn, item.en_q, item.cn_q, ...(item.en_opts || []), ...(item.cn_opts || [])].join(' ');
+            return isChinese ? cnRegex.test(target) : (enRegex && enRegex.test(target));
         });
 
-        document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
-        let allHtml = getWordStatusCards(query);
+        document.getElementById('count').innerText = `找到 ${filtered.length} 个结果`;
         
+        let html = "";
+        if (!isChinese) {
+            const q = query.toLowerCase();
+            const check = (set) => {
+                if (set.has(q)) return true;
+                for (let f of highlightFamily) if(set.has(f)) return true;
+                return false;
+            };
+            const row1 = [], row2 = [];
+            if (check(sets.vocabulary)) row1.push(`<div class="badge-item in"><span class="badge-icon">🎯</span> 属于考研大纲单词</div>`);
+            if (check(sets.freq)) row1.push(`<div class="badge-item freq"><span class="badge-icon">🔵</span> 属于1200高频词</div>`);
+            if (check(sets.middle)) row2.push(`<div class="badge-item middle"><i class="fas fa-book"></i> 属于初中单词</div>`);
+            if (check(sets.high)) row2.push(`<div class="badge-item high"><i class="fas fa-book"></i> 属于高中单词</div>`);
+            if (check(sets.cet4)) row2.push(`<div class="badge-item cet4"><i class="fas fa-book"></i> 属于四级单词</div>`);
+            if (check(sets.cet6)) row2.push(`<div class="badge-item cet6"><i class="fas fa-book"></i> 属于六级单词</div>`);
+            
+            if (row1.length || row2.length) {
+                html += `<div class="word-status-area">`;
+                if(row1.length) html += `<div class="badge-row">${row1.join('')}</div>`;
+                if(row2.length) html += `<div class="badge-row">${row2.join('')}</div>`;
+                html += `</div>`;
+            }
+        }
+
         if (filtered.length === 0) {
-            allHtml += '<div class="no-result">未找到相关句子，换个词试试？</div>';
-            resultsDiv.innerHTML = allHtml;
+            resultsDiv.innerHTML = html + '<div class="no-result">未找到相关句子，换个词试试？</div>';
             return;
         }
 
-        // 渲染每个句子卡片
-        filtered.forEach(item => {
-            if (item.en_q && item.en_opts) {
-                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, highlightFamily);
-                const highlightedCnQ = highlightText(item.cn_q, cnRegex);
+        filtered.slice(0, 200).forEach(item => {
+            const isComplex = item.en_q && item.en_opts;
+            const sourceHtml = `<div class="source-id"><span class="source-tag ${item._sourceClass}">${item._sourceTag}</span>📚 ${item.display_id || item.id}</div>`;
+            if (isComplex) {
                 let optsHtml = '';
                 for (let i = 0; i < item.en_opts.length; i++) {
-                    const clickableEnOpt = makeWordsClickableWithHighlight(item.en_opts[i], highlightFamily);
-                    const highlightedCnOpt = highlightText(item.cn_opts[i] || '', cnRegex);
-                    optsHtml += `<div><span class="opt-en">${clickableEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
+                    optsHtml += `<div><span>${makeWordsClickable(item.en_opts[i], highlightFamily, isChinese)}</span>　<span class="opt-cn">${highlightText(item.cn_opts[i] || '', cnRegex)}</span></div>`;
                 }
-                allHtml += `
-                    <div class="card">
-                        <div class="source-id">
-                            <span class="source-tag ${item._sourceClass}">${item._sourceTag}</span>
-                            📚 ${item.display_id || item.id}
-                        </div>
-                        <div class="en">${clickableEnQ}</div>
-                        <div class="cn">${highlightedCnQ}</div>
-                        <div class="opts">${optsHtml}</div>
-                    </div>
-                `;
+                html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(item.en_q, highlightFamily, isChinese)}</div><div class="cn">${highlightText(item.cn_q, cnRegex)}</div><div class="opts">${optsHtml}</div></div>`;
             } else {
-                const cleanEn = cleanEnglish(item.en || '');
-                const clickableEn = makeWordsClickableWithHighlight(cleanEn, highlightFamily);
-                const highlightedCn = item.cn ? highlightText(item.cn, cnRegex) : '';
-                const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
-                allHtml += `
-                    <div class="card">
-                        <div class="source-id">
-                            <span class="source-tag ${item._sourceClass}">${item._sourceTag}</span>
-                            📚 ${item.id}
-                        </div>
-                        <div class="en">${clickableEn} ${wordCountHtml}</div>
-                        <div class="cn">${highlightedCn}</div>
-                    </div>
-                `;
+                const countStr = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
+                html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(cleanEnglish(item.en), highlightFamily, isChinese)} ${countStr}</div><div class="cn">${highlightText(item.cn || '', cnRegex)}</div></div>`;
             }
         });
-        resultsDiv.innerHTML = allHtml;
-        
-        document.querySelectorAll('.clickable-word').forEach(el => {
-            el.removeEventListener('click', wordClickHandler);
-            el.addEventListener('click', wordClickHandler);
-        });
-    }
-    
-    function wordClickHandler(e) {
-        e.stopPropagation();
-        const word = this.getAttribute('data-word');
-        if (word) {
-            searchWord(word);
-        }
+        resultsDiv.innerHTML = html;
     }
 
-    searchBox.addEventListener('input', () => {
-        performSearch();
-    });
+    async function loadTxt(file, set) {
+        try {
+            const res = await fetch(file);
+            if (res.ok) {
+                const text = await res.text();
+                text.split(/\n/).forEach(line => {
+                    const w = line.trim().toLowerCase();
+                    if (w && !w.startsWith('#')) set.add(w);
+                });
+            }
+        } catch (e) {}
+    }
+
+    async function init() {
+        initMappings();
+        const searchBox = document.getElementById('searchBox');
+        try {
+            await Promise.all([
+                ...JSON_FILES.map(async file => {
+                    const res = await fetch(file.name);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const items = Array.isArray(data) ? data : [data];
+                        items.forEach(item => {
+                            item._sourceTag = file.tag;
+                            item._sourceClass = file.tagClass;
+                            const m = (item.en || '').match(/\((\d+)\s*words\)/i);
+                            item._wordCount = m ? m[1] : null;
+                        });
+                        corpus = corpus.concat(items);
+                    }
+                }),
+                loadTxt('大纲.txt', sets.vocabulary), loadTxt('1200.txt', sets.freq),
+                loadTxt('初中单词.txt', sets.middle), loadTxt('高中单词.txt', sets.high),
+                loadTxt('四级.txt', sets.cet4), loadTxt('六级.txt', sets.cet6)
+            ]);
+
+            searchBox.disabled = false;
+            searchBox.placeholder = "输入单词（支持变形/复数/时态）...";
+            document.getElementById('count').innerText = `✅ 加载成功，共 ${corpus.length} 条记录`;
+
+            let debounceTimer;
+            searchBox.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(performSearch, 300);
+            });
+
+            document.getElementById('results').addEventListener('click', (e) => {
+                const wordEl = e.target.closest('.clickable-word');
+                if (wordEl) {
+                    searchBox.value = wordEl.getAttribute('data-word');
+                    performSearch();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        } catch (e) { 
+            document.getElementById('count').innerText = "❌ 加载失败，请刷新重试"; 
+        }
+    }
+    init();
 </script>
 </body>
 </html>
