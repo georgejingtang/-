@@ -10,6 +10,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: var(--text-main); max-width: 850px; margin: 0 auto; padding: 20px; background: #f8fafc; }
         .header { text-align: center; margin-bottom: 30px; padding: 20px 0; }
         .header h1 { font-size: 2.2rem; color: #0f172a; margin-bottom: 10px; }
+        .header p { font-size: 0.95rem; color: #475569; }
         #searchBox { width: 100%; padding: 15px 25px; font-size: 18px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); box-sizing: border-box; }
         #searchBox:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         .result-count { margin-top: 15px; font-size: 14px; color: var(--text-muted); font-weight: 500; height: 20px; }
@@ -49,7 +50,7 @@
 <body>
 <div class="header">
     <h1>唐静考研英语</h1>
-    <p>🔍 输入任意单词，在05年至今的考研试卷中检索，在显示结果中也可以点击任意单词检索</p>
+    <p>🔍 搜索任意单词，在05年至今的考研试卷中检索，结果中的单词也可以交互检索</p>
     <input type="text" id="searchBox" placeholder="正在加载词库..." disabled autofocus>
     <div id="count" class="result-count">初始化中...</div>
 </div>
@@ -92,80 +93,70 @@
         plurals.forEach(([s, p]) => { irregularPluralMap.set(s, p); irregularPluralMap.set(p, s); });
     }
 
-    // ==================== 增强版核心算法（集成 Y/I 转换）====================
+    // ==================== 终极词形还原引擎（暴力全量策略）====================
     function getWordFamily(word) {
         const lower = word.toLowerCase();
         const family = new Set();
-        let possibleRoots = new Set([lower]);
+        let roots = new Set([lower]);
 
-        // 1. 寻找词根（归一化）- 集成 Y/I 转换
-        if (irregularVerbMap.has(lower)) {
-            possibleRoots.add(irregularVerbMap.get(lower));
-        } else if (irregularPluralMap.has(lower)) {
-            possibleRoots.add(irregularPluralMap.get(lower));
-        } else {
-            // 后缀剥离与 Y/I 补偿（关键新增）
-            if (lower.endsWith('ies') && lower.length > 3) {
-                possibleRoots.add(lower.slice(0, -3) + 'y'); // denied -> deny
-            } else if (lower.endsWith('ied') && lower.length > 3) {
-                possibleRoots.add(lower.slice(0, -3) + 'y'); // studied -> study
-            } else if (lower.endsWith('ing')) {
-                let stem = lower.slice(0, -3);
-                possibleRoots.add(stem);
-                possibleRoots.add(stem + 'e'); // introducing -> introduce
-                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) possibleRoots.add(stem.slice(0, -1)); // sitting -> sit
-            } else if (lower.endsWith('ed')) {
-                let stem = lower.slice(0, -2);
-                possibleRoots.add(stem);
-                possibleRoots.add(stem + 'e'); // introduced -> introduce
-                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) possibleRoots.add(stem.slice(0, -1)); // planned -> plan
-            } else if (lower.endsWith('es')) {
-                possibleRoots.add(lower.slice(0, -1)); // styles -> style
-                possibleRoots.add(lower.slice(0, -2)); // boxes -> box
-            } else if (lower.endsWith('s') && !lower.endsWith('ss')) {
-                possibleRoots.add(lower.slice(0, -1)); // books -> book
-            }
+        // 步骤1：彻底剥离后缀，寻找所有潜在词根
+        if (irregularVerbMap.has(lower)) roots.add(irregularVerbMap.get(lower));
+        if (irregularPluralMap.has(lower)) roots.add(irregularPluralMap.get(lower));
+        
+        // 尝试剥离各种后缀（无条件全量尝试）
+        if (lower.endsWith('ies') && lower.length > 3) roots.add(lower.slice(0, -3) + 'y');
+        if (lower.endsWith('ied') && lower.length > 3) roots.add(lower.slice(0, -3) + 'y');
+        if (lower.endsWith('ing')) {
+            let stem = lower.slice(0, -3);
+            roots.add(stem);
+            roots.add(stem + 'e');
+            if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) roots.add(stem.slice(0, -1));
+        }
+        if (lower.endsWith('ed')) {
+            let stem = lower.slice(0, -2);
+            roots.add(stem);
+            roots.add(stem + 'e');
+            if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) roots.add(stem.slice(0, -1));
+        }
+        if (lower.endsWith('es')) { roots.add(lower.slice(0, -1)); roots.add(lower.slice(0, -2)); }
+        if (lower.endsWith('s') && !lower.endsWith('ss') && !lower.endsWith('us') && !lower.endsWith('is')) {
+            roots.add(lower.slice(0, -1));
         }
 
-        // 2. 从所有可能的词根派生所有形态
-        possibleRoots.forEach(root => {
-            if (root.length < 2) return;
-            family.add(root);
+        // 步骤2：基于所有潜在词根，强制生成全量变体
+        const finalFamily = new Set();
+        roots.forEach(r => {
+            if (r.length < 2) return;
+            finalFamily.add(r);
+            finalFamily.add(r + 's');
+            finalFamily.add(r + 'es');
+            finalFamily.add(r + 'ed');
+            finalFamily.add(r + 'ing');
             
-            // 基础派生
-            family.add(root + 's');
-            
-            // Y 变 I 规则（核心新增）
-            if (root.endsWith('y') && !/[aeiou]y$/.test(root)) {
-                family.add(root.slice(0, -1) + 'ies');
-                family.add(root.slice(0, -1) + 'ied');
+            // 处理 e 结尾
+            if (r.endsWith('e')) {
+                finalFamily.add(r + 'd');
+                finalFamily.add(r.slice(0, -1) + 'ing');
             }
-            
-            // 加 ed / ing
-            if (root.endsWith('e')) {
-                family.add(root + 'd');
-                family.add(root.slice(0, -1) + 'ing');
-            } else {
-                family.add(root + 'ed');
-                family.add(root + 'ing');
-                family.add(root + 'es');
-                // 闭音节双写
-                if (/[^aeiou][aeiou][^aeiou]$/.test(root) && !root.endsWith('w') && !root.endsWith('x') && !root.endsWith('y')) {
-                    let last = root.slice(-1);
-                    family.add(root + last + 'ing');
-                    family.add(root + last + 'ed');
-                }
+            // 处理 y 结尾
+            if (r.endsWith('y') && !/[aeiou]y$/.test(r)) {
+                finalFamily.add(r.slice(0, -1) + 'ies');
+                finalFamily.add(r.slice(0, -1) + 'ied');
             }
-
-            // 英美拼写
-            if (usUkSpellingMap.has(root)) family.add(usUkSpellingMap.get(root));
-            
-            // 关联不规则
-            for (const [v, r] of irregularVerbMap.entries()) if (r === root) family.add(v);
-            for (const [v, r] of irregularPluralMap.entries()) if (r === root) family.add(v);
+            // 处理双写辅音（闭音节）
+            if (/[^aeiou][aeiou][^aeiou]$/.test(r) && !r.endsWith('w') && !r.endsWith('x') && !r.endsWith('y')) {
+                let last = r.slice(-1);
+                finalFamily.add(r + last + 'ing');
+                finalFamily.add(r + last + 'ed');
+            }
+            // 处理美英拼写
+            if (usUkSpellingMap.has(r)) finalFamily.add(usUkSpellingMap.get(r));
+            // 处理不规则映射
+            for (const [v, base] of irregularVerbMap.entries()) if (base === r) finalFamily.add(v);
+            for (const [v, base] of irregularPluralMap.entries()) if (base === r) finalFamily.add(v);
         });
 
-        return Array.from(family).filter(w => w.length > 1);
+        return Array.from(finalFamily).filter(w => w.length > 1);
     }
 
     function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -200,8 +191,10 @@
         if (!isChinese && /^[a-zA-Z'-]+$/.test(query)) {
             const family = getWordFamily(query);
             family.forEach(f => highlightFamily.add(f));
+            // 按长度降序排列，防止短词拦截长词匹配
             const pattern = family.sort((a,b) => b.length - a.length).map(f => `\\b${escapeRegExp(f)}\\b`).join('|');
             enRegex = new RegExp(pattern, 'gi');
+            console.log(`搜索 "${query}" → 词族: [${family.join(', ')}]`);
         }
 
         const cnRegex = new RegExp(escapeRegExp(query), 'gi');
@@ -254,7 +247,7 @@
             } else {
                 const cleanEn = cleanEnglish(item.en || '');
                 const countStr = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
-                html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(item.en, highlightFamily, isChinese)} ${countStr}</div><div class="cn">${highlightText(item.cn || '', cnRegex)}</div></div>`;
+                html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(cleanEn, highlightFamily, isChinese)} ${countStr}</div><div class="cn">${highlightText(item.cn || '', cnRegex)}</div></div>`;
             }
         });
         resultsDiv.innerHTML = html;
