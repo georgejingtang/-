@@ -27,7 +27,6 @@
         .badge-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 40px; font-size: 13px; font-weight: 500; background: #f1f5f9; color: #1f2937; }
         .badge-item.in { background: #dcfce7; color: #166534; border-left: 3px solid #22c55e; }
         .badge-item.freq { background: #e0f2fe; color: #0c4a6e; border-left: 3px solid #0ea5e9; }
-        /* 彩色书籍图标样式 */
         .badge-item.middle { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
         .badge-item.middle i { color: #4caf50; }
         .badge-item.high { background: #fff3e0; color: #ef6c00; border-left: 3px solid #ff9800; }
@@ -50,7 +49,7 @@
 <body>
 <div class="header">
     <h1>唐静考研英语</h1>
-    <p>🔍 搜索任意单词，在05年至今的考研试卷中检索，结果中的任意单词可点击检索</p>
+    <p>🔍 智能词形搜索：支持 deny/denied, study/studied 自动关联</p>
     <input type="text" id="searchBox" placeholder="正在加载词库..." disabled autofocus>
     <div id="count" class="result-count">初始化中...</div>
 </div>
@@ -72,90 +71,101 @@
     const irregularPluralMap = new Map();
 
     function initMappings() {
-        const spellingPairs = [
-            ['behavior', 'behaviour'], ['color', 'colour'], ['favor', 'favour'], ['honor', 'honour'],
-            ['neighbor', 'neighbour'], ['labor', 'labour'], ['organize', 'organise'], ['realize', 'realise'],
-            ['analyze', 'analyse'], ['center', 'centre'], ['theater', 'theatre'], ['meter', 'metre'],
-            ['defense', 'defence'], ['offense', 'offence'], ['license', 'licence'], ['practice', 'practise'],
-            ['traveling', 'travelling']
-        ];
+        const spellingPairs = [['behavior', 'behaviour'], ['color', 'colour'], ['favor', 'favour'], ['honor', 'honour'], ['neighbor', 'neighbour'], ['labor', 'labour'], ['organize', 'organise'], ['realize', 'realise'], ['analyze', 'analyse'], ['center', 'centre'], ['theater', 'theatre'], ['meter', 'metre'], ['defense', 'defence'], ['offense', 'offence'], ['license', 'licence'], ['practice', 'practise'], ['traveling', 'travelling']];
         spellingPairs.forEach(([us, uk]) => { usUkSpellingMap.set(us, uk); usUkSpellingMap.set(uk, us); });
 
         const irregulars = [
-            ['think', 'thought', 'thought'], ['keep', 'kept', 'kept'], ['find', 'found', 'found'], ['seek', 'sought', 'sought'],
-            ['lead', 'led', 'led'], ['bear', 'bore', 'borne'], ['begin', 'began', 'begun'], ['break', 'broke', 'broken'], 
+            ['think', 'thought'], ['keep', 'kept'], ['find', 'found'], ['seek', 'sought'],
+            ['lead', 'led'], ['bear', 'bore', 'borne'], ['begin', 'began', 'begun'], ['break', 'broke', 'broken'], 
             ['choose', 'chose', 'chosen'], ['speak', 'spoke', 'spoken'], ['steal', 'stole', 'stolen'], ['wear', 'wore', 'worn'], 
             ['write', 'wrote', 'written'], ['drive', 'drove', 'driven'], ['see', 'saw', 'seen'], ['give', 'gave', 'given'],
-            ['go', 'went', 'gone'], ['do', 'did', 'done'], ['buy', 'bought', 'bought'], ['bring', 'brought', 'brought'],
-            ['catch', 'caught', 'caught'], ['teach', 'taught', 'taught'], ['fight', 'fought', 'fought'],
-            ['sing', 'sang', 'sung'], ['ring', 'rang', 'rung'], ['swim', 'swam', 'swum']
+            ['go', 'went', 'gone'], ['do', 'did', 'done'], ['buy', 'bought'], ['bring', 'brought'], ['take', 'took', 'taken'],
+            ['get', 'got', 'gotten'], ['make', 'made'], ['know', 'knew', 'known'], ['tell', 'told'], ['say', 'said']
         ];
-        irregulars.forEach(([base, past, pastPart]) => { 
+        irregulars.forEach(([base, v2, v3]) => { 
             irregularVerbMap.set(base, base); 
-            irregularVerbMap.set(past, base); 
-            if(pastPart) irregularVerbMap.set(pastPart, base); 
+            irregularVerbMap.set(v2, base); 
+            if(v3) irregularVerbMap.set(v3, base); 
         });
 
-        const plurals = [
-            ['analysis', 'analyses'], ['basis', 'bases'], ['crisis', 'crises'], ['criterion', 'criteria'],
-            ['datum', 'data'], ['phenomenon', 'phenomena'], ['medium', 'media'], ['child', 'children'],
-            ['man', 'men'], ['woman', 'women'], ['foot', 'feet'], ['tooth', 'teeth'], ['person', 'people'],
-            ['leaf', 'leaves'], ['knife', 'knives'], ['life', 'lives'], ['shelf', 'shelves']
-        ];
+        const plurals = [['analysis', 'analyses'], ['basis', 'bases'], ['crisis', 'crises'], ['criterion', 'criteria'], ['datum', 'data'], ['phenomenon', 'phenomena'], ['medium', 'media'], ['child', 'children'], ['man', 'men'], ['woman', 'women'], ['foot', 'feet'], ['tooth', 'teeth'], ['person', 'people'], ['leaf', 'leaves']];
         plurals.forEach(([s, p]) => { irregularPluralMap.set(s, p); irregularPluralMap.set(p, s); });
     }
 
+    // ==================== 增强版核心算法（集成 Y/I 转换）====================
     function getWordFamily(word) {
-        const lowerWord = word.toLowerCase();
+        const lower = word.toLowerCase();
         const family = new Set();
-        let baseForm = lowerWord;
+        let possibleRoots = new Set([lower]);
 
-        // 1. 寻找词根 (Lemmatization)
-        if (irregularVerbMap.has(lowerWord)) baseForm = irregularVerbMap.get(lowerWord);
-        else if (irregularPluralMap.has(lowerWord)) baseForm = irregularPluralMap.get(lowerWord);
-        else {
-            if (lowerWord.endsWith('ies') && lowerWord.length > 3) baseForm = lowerWord.slice(0, -3) + 'y';
-            else if (lowerWord.endsWith('ing')) {
-                let stem = lowerWord.slice(0, -3);
-                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) baseForm = stem.slice(0, -1);
-                else baseForm = stem;
-            }
-            else if (lowerWord.endsWith('ed')) {
-                let stem = lowerWord.slice(0, -2);
-                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) baseForm = stem.slice(0, -1);
-                else baseForm = stem;
-            }
-            else if (lowerWord.endsWith('es')) baseForm = lowerWord.slice(0, -2);
-            else if (lowerWord.endsWith('s') && !lowerWord.endsWith('ss')) baseForm = lowerWord.slice(0, -1);
-        }
-
-        family.add(baseForm);
-        family.add(lowerWord);
-
-        // 2. 派生变形
-        if (baseForm.endsWith('y') && !/[aeiou]y$/.test(baseForm)) family.add(baseForm.slice(0, -1) + 'ies');
-        else if (/[sxz]$|sh$|ch$/.test(baseForm)) family.add(baseForm + 'es');
-        else family.add(baseForm + 's');
-
-        if (baseForm.endsWith('e')) {
-            family.add(baseForm + 'd');
-            family.add(baseForm.slice(0, -1) + 'ing');
+        // 1. 寻找词根（归一化）- 集成 Y/I 转换
+        if (irregularVerbMap.has(lower)) {
+            possibleRoots.add(irregularVerbMap.get(lower));
+        } else if (irregularPluralMap.has(lower)) {
+            possibleRoots.add(irregularPluralMap.get(lower));
         } else {
-            family.add(baseForm + 'ed');
-            family.add(baseForm + 'ing');
-            if (/[^aeiou][aeiou][^aeiou]$/.test(baseForm)) {
-                let last = baseForm.slice(-1);
-                family.add(baseForm + last + 'ing');
-                family.add(baseForm + last + 'ed');
+            // 后缀剥离与 Y/I 补偿（关键新增）
+            if (lower.endsWith('ies') && lower.length > 3) {
+                possibleRoots.add(lower.slice(0, -3) + 'y'); // denied -> deny
+            } else if (lower.endsWith('ied') && lower.length > 3) {
+                possibleRoots.add(lower.slice(0, -3) + 'y'); // studied -> study
+            } else if (lower.endsWith('ing')) {
+                let stem = lower.slice(0, -3);
+                possibleRoots.add(stem);
+                possibleRoots.add(stem + 'e'); // introducing -> introduce
+                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) possibleRoots.add(stem.slice(0, -1)); // sitting -> sit
+            } else if (lower.endsWith('ed')) {
+                let stem = lower.slice(0, -2);
+                possibleRoots.add(stem);
+                possibleRoots.add(stem + 'e'); // introduced -> introduce
+                if (stem.length > 3 && stem[stem.length-1] === stem[stem.length-2]) possibleRoots.add(stem.slice(0, -1)); // planned -> plan
+            } else if (lower.endsWith('es')) {
+                possibleRoots.add(lower.slice(0, -1)); // styles -> style
+                possibleRoots.add(lower.slice(0, -2)); // boxes -> box
+            } else if (lower.endsWith('s') && !lower.endsWith('ss')) {
+                possibleRoots.add(lower.slice(0, -1)); // books -> book
             }
         }
 
-        // 3. 关联不规则映射
-        for (const [v, r] of irregularVerbMap.entries()) if (r === baseForm) family.add(v);
-        for (const [v, r] of irregularPluralMap.entries()) if (r === baseForm) family.add(v);
-        if (usUkSpellingMap.has(baseForm)) family.add(usUkSpellingMap.get(baseForm));
+        // 2. 从所有可能的词根派生所有形态
+        possibleRoots.forEach(root => {
+            if (root.length < 2) return;
+            family.add(root);
+            
+            // 基础派生
+            family.add(root + 's');
+            
+            // Y 变 I 规则（核心新增）
+            if (root.endsWith('y') && !/[aeiou]y$/.test(root)) {
+                family.add(root.slice(0, -1) + 'ies');
+                family.add(root.slice(0, -1) + 'ied');
+            }
+            
+            // 加 ed / ing
+            if (root.endsWith('e')) {
+                family.add(root + 'd');
+                family.add(root.slice(0, -1) + 'ing');
+            } else {
+                family.add(root + 'ed');
+                family.add(root + 'ing');
+                family.add(root + 'es');
+                // 闭音节双写
+                if (/[^aeiou][aeiou][^aeiou]$/.test(root) && !root.endsWith('w') && !root.endsWith('x') && !root.endsWith('y')) {
+                    let last = root.slice(-1);
+                    family.add(root + last + 'ing');
+                    family.add(root + last + 'ed');
+                }
+            }
 
-        return Array.from(family);
+            // 英美拼写
+            if (usUkSpellingMap.has(root)) family.add(usUkSpellingMap.get(root));
+            
+            // 关联不规则
+            for (const [v, r] of irregularVerbMap.entries()) if (r === root) family.add(v);
+            for (const [v, r] of irregularPluralMap.entries()) if (r === root) family.add(v);
+        });
+
+        return Array.from(family).filter(w => w.length > 1);
     }
 
     function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -190,7 +200,7 @@
         if (!isChinese && /^[a-zA-Z'-]+$/.test(query)) {
             const family = getWordFamily(query);
             family.forEach(f => highlightFamily.add(f));
-            const pattern = family.map(f => `\\b${escapeRegExp(f)}\\b`).join('|');
+            const pattern = family.sort((a,b) => b.length - a.length).map(f => `\\b${escapeRegExp(f)}\\b`).join('|');
             enRegex = new RegExp(pattern, 'gi');
         }
 
@@ -242,8 +252,9 @@
                 }
                 html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(item.en_q, highlightFamily, isChinese)}</div><div class="cn">${highlightText(item.cn_q, cnRegex)}</div><div class="opts">${optsHtml}</div></div>`;
             } else {
+                const cleanEn = cleanEnglish(item.en || '');
                 const countStr = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
-                html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(cleanEnglish(item.en), highlightFamily, isChinese)} ${countStr}</div><div class="cn">${highlightText(item.cn || '', cnRegex)}</div></div>`;
+                html += `<div class="card">${sourceHtml}<div class="en">${makeWordsClickable(item.en, highlightFamily, isChinese)} ${countStr}</div><div class="cn">${highlightText(item.cn || '', cnRegex)}</div></div>`;
             }
         });
         resultsDiv.innerHTML = html;
