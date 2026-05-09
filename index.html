@@ -122,7 +122,7 @@
         irregularVerbMap.set(pastPart, base);
     }
 
-    // ==================== 规则动词变体映射（过去式、现在分词）====================
+    // ==================== 规则动词变体映射 ====================
     const regularMappings = {
         'looking': 'look', 'looked': 'look',
         'talking': 'talk', 'talked': 'talk',
@@ -131,7 +131,6 @@
         'asking': 'ask', 'asked': 'ask',
         'helping': 'help', 'helped': 'help',
         'watching': 'watch', 'watched': 'watch',
-        'reading': 'read', 'reading': 'read',
         'considering': 'consider', 'considered': 'consider',
         'providing': 'provide', 'provided': 'provide',
         'creating': 'create', 'created': 'create',
@@ -172,58 +171,61 @@
         irregularPluralMap.set(plural, singular);
     }
 
-    // ==================== 核心简化函数：还原为原形 ====================
-    function getBaseForm(word) {
+    // ==================== 获取完整词族（用于搜索和高亮）====================
+    function getWordFamily(word) {
         const lowerWord = word.toLowerCase();
+        const family = new Set();
         
-        // 1. 不规则动词/规则动词变体映射
+        // 1. 获取原形
+        let baseForm = lowerWord;
         if (irregularVerbMap.has(lowerWord)) {
-            return irregularVerbMap.get(lowerWord);
+            baseForm = irregularVerbMap.get(lowerWord);
+        } else if (irregularPluralMap.has(lowerWord)) {
+            baseForm = irregularPluralMap.get(lowerWord);
+        }
+        family.add(baseForm);
+        
+        // 2. 添加原形的常见变体
+        // 加 s
+        if (baseForm.endsWith('y') && !/[aeiou]y$/.test(baseForm)) {
+            family.add(baseForm.slice(0, -1) + 'ies');
+        } else if (baseForm.endsWith('s') || baseForm.endsWith('sh') || baseForm.endsWith('ch') || baseForm.endsWith('x') || baseForm.endsWith('z')) {
+            family.add(baseForm + 'es');
+        } else {
+            family.add(baseForm + 's');
+        }
+        // 加 ed
+        if (baseForm.endsWith('e')) {
+            family.add(baseForm + 'd');
+        } else {
+            family.add(baseForm + 'ed');
+        }
+        // 加 ing
+        if (baseForm.endsWith('e')) {
+            family.add(baseForm.slice(0, -1) + 'ing');
+        } else {
+            family.add(baseForm + 'ing');
         }
         
-        // 2. 不规则复数映射
-        if (irregularPluralMap.has(lowerWord)) {
-            return irregularPluralMap.get(lowerWord);
-        }
-        
-        // 3. 规则变化：去 s（复数或三单）
-        if (lowerWord.endsWith('s') && lowerWord.length > 3 && !lowerWord.endsWith('ss') && !lowerWord.endsWith('us') && !lowerWord.endsWith('is')) {
-            let stem = lowerWord.slice(0, -1);
-            if (stem.endsWith('ie')) {
-                return stem.slice(0, -2) + 'y';
-            }
-            if (stem.length > 2) {
-                return stem;
+        // 3. 添加不规则动词的所有形式
+        for (const [form, base] of irregularVerbMap.entries()) {
+            if (base === baseForm) {
+                family.add(form);
             }
         }
         
-        // 4. 规则变化：去 ing
-        if (lowerWord.endsWith('ing') && lowerWord.length > 4) {
-            let stem = lowerWord.slice(0, -3);
-            // 处理去掉 ing 后需要补 e 的情况（如 making -> make）
-            if (stem.endsWith('k') || stem.endsWith('t') || stem.endsWith('v') || stem.endsWith('d') || stem.endsWith('m')) {
-                const withE = stem + 'e';
-                if (withE.length > 3) {
-                    return withE;
-                }
-            }
-            return stem;
+        // 4. 添加复数形式
+        for (const [singular, plural] of pluralPairs) {
+            if (singular === baseForm) family.add(plural);
+            if (plural === baseForm) family.add(singular);
         }
         
-        // 5. 规则变化：去 ed
-        if (lowerWord.endsWith('ed') && lowerWord.length > 3) {
-            let stem = lowerWord.slice(0, -2);
-            if (stem.endsWith('e')) {
-                return stem;
-            }
-            const withE = stem + 'e';
-            if (withE.length > 3) {
-                return withE;
-            }
-            return stem;
+        // 5. 英美拼写
+        if (usUkSpellingMap.has(baseForm)) {
+            family.add(usUkSpellingMap.get(baseForm));
         }
         
-        return lowerWord;
+        return Array.from(family);
     }
 
     // ==================== 辅助函数 ====================
@@ -245,8 +247,10 @@
     function checkBelonging(word, targetSet) {
         if (!word) return false;
         if (targetSet.has(word.toLowerCase())) return true;
-        const baseForm = getBaseForm(word);
-        if (baseForm !== word.toLowerCase() && targetSet.has(baseForm)) return true;
+        const family = getWordFamily(word);
+        for (const w of family) {
+            if (targetSet.has(w)) return true;
+        }
         return false;
     }
 
@@ -285,19 +289,13 @@
     }
 
     // 生成可点击的单词（同时高亮匹配的单词）
-    function makeWordsClickableWithHighlight(text, baseForm) {
+    function makeWordsClickableWithHighlight(text, highlightFamily) {
         if (!text) return '';
-        if (!baseForm) return text;
-        
-        const lowerBase = baseForm.toLowerCase();
+        if (!highlightFamily || highlightFamily.size === 0) return text;
         
         return text.replace(/([a-zA-Z]+(?:'[a-zA-Z]+)?(?:-[a-zA-Z]+)?)/g, function(match) {
             const lowerMatch = match.toLowerCase();
-            // 检查是否匹配原形（或通过 getBaseForm 还原后匹配）
-            let isMatch = (lowerMatch === lowerBase);
-            if (!isMatch && getBaseForm(lowerMatch) === lowerBase) {
-                isMatch = true;
-            }
+            const isMatch = highlightFamily.has(lowerMatch);
             let displayText = match;
             if (isMatch) {
                 displayText = `<mark>${match}</mark>`;
@@ -413,16 +411,25 @@
 
         const isChinese = hasChinese(query);
         
-        // 核心：无论输入什么，都还原为原形进行搜索
-        let searchBaseForm = query;
+        let wordFamily = [];
+        let highlightFamily = new Set();
+        
         if (!isChinese && query.match(/^[a-zA-Z]+$/)) {
-            searchBaseForm = getBaseForm(query);
-            console.log(`搜索 "${query}" → 还原为原形: "${searchBaseForm}"`);
+            wordFamily = getWordFamily(query);
+            wordFamily.forEach(term => highlightFamily.add(term));
+            console.log(`搜索 "${query}" → 扩展词族: [${wordFamily.join(', ')}]`);
+        } else {
+            wordFamily = [query];
+            highlightFamily.add(query);
         }
         
-        const escapedQuery = searchBaseForm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // 修复：精确匹配单词边界，不使用 [a-z]* 通配符
-        const enRegex = isChinese ? null : new RegExp(`\\b${escapedQuery}\\b`, 'gi');
+        // 构建精确匹配的正则表达式（精确匹配词族中的每个词）
+        let enRegex = null;
+        if (!isChinese) {
+            const escapedTerms = wordFamily.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            const pattern = escapedTerms.map(term => `\\b${term}\\b`).join('|');
+            enRegex = new RegExp(pattern, 'gi');
+        }
         const cnRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
 
         // 过滤语料
@@ -445,7 +452,7 @@
         });
 
         document.getElementById('count').innerText = `找到 ${filtered.length} 个匹配结果`;
-        let allHtml = getWordStatusCards(searchBaseForm);
+        let allHtml = getWordStatusCards(query);
         
         if (filtered.length === 0) {
             allHtml += '<div class="no-result">未找到相关句子，换个词试试？</div>';
@@ -456,11 +463,11 @@
         // 渲染每个句子卡片
         filtered.forEach(item => {
             if (item.en_q && item.en_opts) {
-                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, searchBaseForm);
+                const clickableEnQ = makeWordsClickableWithHighlight(item.en_q, highlightFamily);
                 const highlightedCnQ = highlightText(item.cn_q, cnRegex);
                 let optsHtml = '';
                 for (let i = 0; i < item.en_opts.length; i++) {
-                    const clickableEnOpt = makeWordsClickableWithHighlight(item.en_opts[i], searchBaseForm);
+                    const clickableEnOpt = makeWordsClickableWithHighlight(item.en_opts[i], highlightFamily);
                     const highlightedCnOpt = highlightText(item.cn_opts[i] || '', cnRegex);
                     optsHtml += `<div><span class="opt-en">${clickableEnOpt}</span>　<span class="opt-cn">${highlightedCnOpt}</span></div>`;
                 }
@@ -477,7 +484,7 @@
                 `;
             } else {
                 const cleanEn = cleanEnglish(item.en || '');
-                const clickableEn = makeWordsClickableWithHighlight(cleanEn, searchBaseForm);
+                const clickableEn = makeWordsClickableWithHighlight(cleanEn, highlightFamily);
                 const highlightedCn = item.cn ? highlightText(item.cn, cnRegex) : '';
                 const wordCountHtml = item._wordCount ? `<span class="word-count">(${item._wordCount} words)</span>` : '';
                 allHtml += `
