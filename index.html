@@ -50,7 +50,7 @@
 <body>
 <div class="header">
     <h1>唐静考研英语</h1>
-    <p>🔍 智能词形还原,精准关联真题 </p>
+    <p>🔍 智能词形还原：精准关联真题</p>
     <input type="text" id="searchBox" placeholder="正在加载词库..." disabled autofocus>
     <div id="count" class="result-count">初始化中...</div>
 </div>
@@ -89,12 +89,66 @@
 
     function initMappings() {
         const spellingPairs = [
+            // -or / -our
             ['behavior','behaviour'],['color','colour'],['favor','favour'],
             ['honor','honour'],['neighbor','neighbour'],['labor','labour'],
+            ['humor','humour'],['rumor','rumour'],['flavor','flavour'],
+            ['vapor','vapour'],['vigor','vigour'],['rigor','rigour'],
+            ['tumor','tumour'],['harbor','harbour'],['endeavor','endeavour'],
+            ['splendor','splendour'],['glamor','glamour'],['armor','armour'],
+            ['odor','odour'],['savor','savour'],['candor','candour'],
+            ['fervor','fervour'],['valor','valour'],['demeanor','demeanour'],
+            // -ize / -ise
             ['organize','organise'],['realize','realise'],['analyze','analyse'],
+            ['recognize','recognise'],['emphasize','emphasise'],['utilize','utilise'],
+            ['maximize','maximise'],['minimize','minimise'],['optimize','optimise'],
+            ['characterize','characterise'],['prioritize','prioritise'],
+            ['specialize','specialise'],['generalize','generalise'],
+            ['summarize','summarise'],['memorize','memorise'],
+            ['criticize','criticise'],['authorize','authorise'],
+            ['finalize','finalise'],['normalize','normalise'],
+            ['stabilize','stabilise'],['standardize','standardise'],
+            ['rationalize','rationalise'],['neutralize','neutralise'],
+            ['modernize','modernise'],['mobilize','mobilise'],
+            ['popularize','popularise'],['visualize','visualise'],
+            ['apologize','apologise'],['sympathize','sympathise'],
+            ['socialize','socialise'],['familiarize','familiarise'],
+            ['paralyze','paralyse'],['scrutinize','scrutinise'],
+            ['revolutionize','revolutionise'],['hypothesize','hypothesise'],
+            ['capitalize','capitalise'],['legalize','legalise'],
+            ['penalize','penalise'],['privatize','privatise'],
+            ['globalize','globalise'],['harmonize','harmonise'],
+            ['polarize','polarise'],['categorize','categorise'],
+            ['energize','energise'],['idealize','idealise'],
+            ['industrialize','industrialise'],['nationalize','nationalise'],
+            ['humanize','humanise'],['patronize','patronise'],
+            ['symbolize','symbolise'],['systematize','systematise'],
+            ['fertilize','fertilise'],['initialize','initialise'],
+            ['satirize','satirise'],['terrorize','terrorise'],
+            // -er / -re
             ['center','centre'],['theater','theatre'],['meter','metre'],
+            ['fiber','fibre'],['liter','litre'],['caliber','calibre'],
+            ['specter','spectre'],['saber','sabre'],['somber','sombre'],
+            ['luster','lustre'],['maneuver','manoeuvre'],
+            // -ense / -ence  /  -ise / -ice
             ['defense','defence'],['offense','offence'],['license','licence'],
-            ['practice','practise'],['traveling','travelling']
+            ['practice','practise'],
+            // 单 l / 双 ll
+            ['traveling','travelling'],['canceled','cancelled'],
+            ['labeled','labelled'],['modeled','modelled'],
+            ['signaled','signalled'],['leveled','levelled'],
+            ['counselor','counsellor'],['enrollment','enrolment'],
+            ['fulfill','fulfil'],['skillful','skilful'],
+            ['willful','wilful'],['woolen','woollen'],
+            // -og / -ogue  &  -am / -amme
+            ['catalog','catalogue'],['dialog','dialogue'],
+            ['analog','analogue'],['program','programme'],
+            ['monolog','monologue'],['prolog','prologue'],['epilog','epilogue'],
+            // 其他高频词
+            ['gray','grey'],['skeptic','sceptic'],['aluminum','aluminium'],
+            ['artifact','artefact'],['judgment','judgement'],
+            ['mold','mould'],['sulfur','sulphur'],['tire','tyre'],
+            ['ax','axe'],['check','cheque'],['encyclopedia','encyclopaedia'],
         ];
         spellingPairs.forEach(([us, uk]) => { usUkSpellingMap.set(us, uk); usUkSpellingMap.set(uk, us); });
 
